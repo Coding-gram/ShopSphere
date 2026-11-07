@@ -7,6 +7,7 @@ export interface ProductFilters {
   category?: string;
   search?: string;
   sort?: string;
+  order?: 'asc' | 'desc';
   minPrice?: number;
   maxPrice?: number;
   featured?: boolean;
@@ -20,6 +21,7 @@ export const productService = {
     if (filters.category) params.set('category', filters.category);
     if (filters.search) params.set('search', filters.search);
     if (filters.sort) params.set('sort', filters.sort);
+    if (filters.order) params.set('order', filters.order);
     if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
     if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
     if (filters.featured) params.set('featured', 'true');
@@ -34,10 +36,9 @@ export const productService = {
     return api.get<unknown, ApiResponse<Product>>(`/products/${slug}`);
   },
 
-  getFeatured() {
-    return api.get<unknown, PaginatedResponse<Product>>(
-      '/products?featured=true&limit=8'
+  getFeatured(limit = 8) {
+    return api.get<unknown, ApiResponse<Product[]>>(
+      `/products/featured?limit=${limit}`
     );
   },
 };
-

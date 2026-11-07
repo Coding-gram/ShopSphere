@@ -135,18 +135,18 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 export interface PaginatedResponse<T> {
   success: boolean;
   statusCode: number;
   message: string;
-  data: {
-    items: T[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-      hasMore: boolean;
-    };
-  };
+  data: T[];
+  pagination: Pagination;
 }
