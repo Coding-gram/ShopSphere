@@ -1,0 +1,16 @@
+{
+  "name": "shopsphere",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ShopSphere — Premium full-stack e-commerce platform",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "test:client": "cd client && npm run test",
+    "test:server": "cd server && npm run test"
+  }
+}
+
