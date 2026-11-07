@@ -46,8 +46,11 @@ async function seed() {
     });
     console.log(`👤 Customer created: ${customer.email}`);
 
-    // Create categories
-    const createdCategories = await Category.insertMany(categories);
+    // Create categories one by one so pre-save hooks generate slugs
+    const createdCategories = [];
+    for (const cat of categories) {
+      createdCategories.push(await Category.create(cat));
+    }
     console.log(`📁 ${createdCategories.length} categories created`);
 
     const catMap = Object.fromEntries(
@@ -221,7 +224,11 @@ async function seed() {
       },
     ];
 
-    const createdProducts = await Product.insertMany(products);
+    // Create products one by one so pre-save hooks generate slugs
+    const createdProducts = [];
+    for (const prod of products) {
+      createdProducts.push(await Product.create(prod));
+    }
     console.log(`🛍️  ${createdProducts.length} products created`);
 
     console.log('\n✅ Seed complete!');

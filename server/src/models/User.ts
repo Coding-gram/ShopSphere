@@ -74,8 +74,8 @@ const userSchema = new Schema<IUser, IUserModel>(
 );
 
 // ── Indexes ──────────────────────────────────────────────────────────────────
+// Note: email already has a unique index from the schema definition.
 
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 
 // ── Pre-save: hash password ──────────────────────────────────────────────────

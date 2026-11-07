@@ -55,8 +55,8 @@ const categorySchema = new Schema<ICategory>(
 );
 
 // ── Indexes ──────────────────────────────────────────────────────────────────
+// Note: name and slug already have unique indexes from the schema definition.
 
-categorySchema.index({ slug: 1 });
 categorySchema.index({ parent: 1 });
 
 // ── Pre-save: generate slug ──────────────────────────────────────────────────

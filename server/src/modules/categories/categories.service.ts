@@ -29,7 +29,7 @@ export async function updateCategory(id: string, data: Partial<ICategory>) {
   }
 
   const category = await Category.findByIdAndUpdate(id, data, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
   if (!category) throw new ApiError(404, 'Category not found');

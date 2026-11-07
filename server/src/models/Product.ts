@@ -91,8 +91,8 @@ const productSchema = new Schema<IProduct>(
 );
 
 // ── Indexes ──────────────────────────────────────────────────────────────────
+// Note: slug and sku already have unique indexes from the schema definition.
 
-productSchema.index({ slug: 1 });
 productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ name: 'text', tags: 'text', description: 'text' });

@@ -20,16 +20,22 @@ interface ProductQuery {
 
 export async function listProducts(query: ProductQuery) {
   const {
-    page = 1,
-    limit = 12,
+    page: rawPage = 1,
+    limit: rawLimit = 12,
     sort = 'createdAt',
     order = 'desc',
     category,
     search,
-    minPrice,
-    maxPrice,
+    minPrice: rawMinPrice,
+    maxPrice: rawMaxPrice,
     featured,
   } = query;
+
+  // Coerce query params to numbers (they arrive as strings from Express)
+  const page = Number(rawPage) || 1;
+  const limit = Number(rawLimit) || 12;
+  const minPrice = rawMinPrice !== undefined ? Number(rawMinPrice) : undefined;
+  const maxPrice = rawMaxPrice !== undefined ? Number(rawMaxPrice) : undefined;
 
   const filter: Record<string, unknown> = { isActive: true };
 
@@ -118,7 +124,7 @@ export async function updateProduct(id: string, data: Partial<IProduct>) {
   }
 
   const product = await Product.findByIdAndUpdate(id, data, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   }).populate('category', 'name slug');
 
@@ -132,7 +138,7 @@ export async function deleteProduct(id: string) {
   const product = await Product.findByIdAndUpdate(
     id,
     { isActive: false },
-    { new: true },
+    { returnDocument: 'after' },
   );
   if (!product) throw new ApiError(404, 'Product not found');
 }

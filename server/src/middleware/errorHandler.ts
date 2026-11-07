@@ -31,6 +31,16 @@ export function errorHandler(
     return;
   }
 
+  // ── JSON parse / syntax error (malformed request body) ────────────────
+  if (err instanceof SyntaxError && 'body' in err) {
+    res.status(400).json({
+      success: false,
+      statusCode: 400,
+      message: 'Invalid JSON in request body',
+    });
+    return;
+  }
+
   // ── Mongoose Validation Error ─────────────────────────────────────────
   if (err instanceof mongoose.Error.ValidationError) {
     const errors = Object.entries(err.errors).map(([field, e]) => ({
