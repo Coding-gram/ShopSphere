@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User, Menu } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Search, Heart, ShoppingBag, User, Menu, LogOut, UserCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import MobileNav from './MobileNav';
 
 const navLinks = [
@@ -14,12 +23,24 @@ const navLinks = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  async function handleLogout() {
+    try {
+      await logout();
+      toast.success('Signed out successfully');
+      navigate('/');
+    } catch {
+      toast.error('Failed to sign out');
+    }
+  }
 
   return (
     <>
@@ -85,7 +106,7 @@ export default function Header() {
           {/* Right: Icons */}
           <div className="flex items-center gap-4 sm:gap-5">
             <Link
-              to="/search"
+              to="/products"
               className="cursor-pointer p-1 text-foreground transition-colors duration-200 hover:text-accent"
               aria-label="Search products"
             >
@@ -106,13 +127,50 @@ export default function Header() {
               <ShoppingBag className="h-5 w-5" />
               {/* Cart badge — will be dynamic in Phase 4 */}
             </Link>
-            <Link
-              to="/login"
-              className="cursor-pointer p-1 text-foreground transition-colors duration-200 hover:text-accent"
-              aria-label="Account"
-            >
-              <User className="h-5 w-5" />
-            </Link>
+
+            {/* Account */}
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 cursor-pointer p-1 text-foreground transition-colors duration-200 hover:text-accent"
+                    aria-label="Account menu"
+                  >
+                    <User className="h-5 w-5" />
+                    <span className="hidden text-sm font-medium lg:inline">
+                      {user?.name?.split(' ')[0]}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium text-foreground">{user?.name}</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                to="/login"
+                className="cursor-pointer p-1 text-foreground transition-colors duration-200 hover:text-accent"
+                aria-label="Sign in"
+              >
+                <User className="h-5 w-5" />
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -125,4 +183,3 @@ export default function Header() {
     </>
   );
 }
-
