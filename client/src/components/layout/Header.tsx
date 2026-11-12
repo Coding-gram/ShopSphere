@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User, Menu, LogOut, UserCircle } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, LogOut, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import MobileNav from './MobileNav';
+import { useCart } from '@/hooks/useCart';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -24,6 +25,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const { cart } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -113,19 +115,16 @@ export default function Header() {
               <Search className="h-5 w-5" />
             </Link>
             <Link
-              to="/wishlist"
-              className="cursor-pointer p-1 text-foreground transition-colors duration-200 hover:text-accent"
-              aria-label="Wishlist"
-            >
-              <Heart className="h-5 w-5" />
-            </Link>
-            <Link
               to="/cart"
               className="relative cursor-pointer p-1 text-foreground transition-colors duration-200 hover:text-accent"
-              aria-label="Shopping cart"
+              aria-label={cart?.itemCount ? `Shopping cart, ${cart.itemCount} items` : 'Shopping cart'}
             >
               <ShoppingBag className="h-5 w-5" />
-              {/* Cart badge — will be dynamic in Phase 4 */}
+              {cart?.itemCount ? (
+                <span aria-hidden="true" className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-on-accent">
+                  {cart.itemCount > 99 ? '99+' : cart.itemCount}
+                </span>
+              ) : null}
             </Link>
 
             {/* Account */}

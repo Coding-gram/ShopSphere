@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { Product } from '@/types';
@@ -77,33 +77,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
           </div>
         )}
 
-        {/* Hover overlay with action hints */}
-        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <div className="flex w-full items-center justify-center gap-3 p-4">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm backdrop-blur-sm transition-colors duration-200 hover:bg-white"
-              aria-label={`Add ${product.name} to wishlist`}
-            >
-              <Heart className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-foreground shadow-sm backdrop-blur-sm transition-colors duration-200 hover:bg-white"
-              aria-label={`Add ${product.name} to cart`}
-            >
-              <ShoppingBag className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
 
         {/* Badges */}
         <div className="absolute left-2 top-2 flex flex-col gap-1.5">

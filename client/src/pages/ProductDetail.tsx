@@ -80,9 +80,8 @@ export default function ProductDetail() {
   }
 
   if (isError || !product) {
-    const is404 =
-      error && 'response' in (error as Record<string, unknown>) &&
-      (error as Record<string, unknown> & { response: { status: number } }).response?.status === 404;
+    const possibleResponse = error as unknown as { response?: { status?: number } } | null;
+    const is404 = possibleResponse?.response?.status === 404;
 
     if (is404) {
       return (

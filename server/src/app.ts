@@ -10,6 +10,9 @@ import { ApiError } from './utils/ApiError.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import productRoutes from './modules/products/products.routes.js';
 import categoryRoutes from './modules/categories/categories.routes.js';
+import cartRoutes from './modules/cart/cart.routes.js';
+import addressRoutes from './modules/addresses/addresses.routes.js';
+import checkoutRoutes from './modules/checkout/checkout.routes.js';
 
 const app = express();
 
@@ -33,6 +36,9 @@ app.get('/api/v1/health', (_req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/addresses', addressRoutes);
+app.use('/api/v1/checkout', checkoutRoutes);
 
 // ── 404 handler for unknown routes ──────────────────────────────────────────
 app.all('/{*path}', (req, _res, next) => {

@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Minus, Plus, Package, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingBag, Minus, Plus, Package, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn, formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
 
 interface ProductInfoProps {
   product: Product;
@@ -14,6 +16,9 @@ interface ProductInfoProps {
 
 export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { addItem, isAdding } = useCart();
 
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
@@ -31,16 +36,19 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const inStock = product.stock > 0;
   const lowStock = product.stock > 0 && product.stock <= 5;
 
-  function handleAddToCart() {
-    toast.info('Cart coming soon', {
-      description: `${product.name} × ${quantity} — Cart functionality will be available in a future update.`,
-    });
-  }
+  async function handleAddToCart() {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to add items to your cart');
+      navigate('/login');
+      return;
+    }
 
-  function handleAddToWishlist() {
-    toast.info('Wishlist coming soon', {
-      description: `${product.name} — Wishlist functionality will be available in a future update.`,
-    });
+    try {
+      await addItem({ productId: product._id, quantity });
+      toast.success('Added to cart');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to add this item to your cart');
+    }
   }
 
   return (
@@ -175,11 +183,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
               </span>
               <button
                 type="button"
-                onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                disabled={quantity >= product.stock}
+                onClick={() => setQuantity((q) => Math.min(Math.min(product.stock, 10), q + 1))}
+                disabled={quantity >= Math.min(product.stock, 10)}
                 className={cn(
                   'flex h-10 w-10 items-center justify-center transition-colors duration-150',
-                  quantity >= product.stock
+                  quantity >= Math.min(product.stock, 10)
                     ? 'text-muted-foreground/40 cursor-not-allowed'
                     : 'text-foreground hover:bg-muted cursor-pointer'
                 )}
@@ -195,20 +203,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
           <Button
             size="lg"
             onClick={handleAddToCart}
-            disabled={!inStock}
+            disabled={!inStock || isAdding}
             className="flex-1 gap-2 bg-accent text-on-accent hover:bg-accent/90 disabled:opacity-50 cursor-pointer"
           >
             <ShoppingBag className="h-5 w-5" />
-            {inStock ? 'Add to Cart' : 'Out of Stock'}
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            onClick={handleAddToWishlist}
-            className="gap-2 cursor-pointer"
-          >
-            <Heart className="h-5 w-5" />
-            Wishlist
+            {inStock ? (isAdding ? 'Adding…' : 'Add to Cart') : 'Out of Stock'}
           </Button>
         </div>
       </div>

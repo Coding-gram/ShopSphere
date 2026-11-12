@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { AddressBook } from '@/components/address/AddressBook';
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').min(2, 'Name must be at least 2 characters'),
@@ -223,6 +224,10 @@ export default function Profile() {
             <span className="font-medium text-success">Active</span>
           </p>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <AddressBook />
       </div>
     </div>
   );

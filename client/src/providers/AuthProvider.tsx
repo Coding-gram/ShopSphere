@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from '@/hooks/useAuth';
 import { authService } from '@/services/auth';
 import api from '@/lib/api';
 import type { User, ApiResponse } from '@/types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
-  }, []);
+    queryClient.removeQueries({ queryKey: ['cart'] });
+    queryClient.removeQueries({ queryKey: ['addresses'] });
+  }, [queryClient]);
 
   const updateProfile = useCallback(async (data: { name?: string; phone?: string }) => {
     const res = await authService.updateProfile(data);

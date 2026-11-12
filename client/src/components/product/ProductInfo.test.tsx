@@ -1,14 +1,24 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { ProductInfo } from './ProductInfo';
 import type { Product } from '@/types';
 
-// Mock sonner
+const addItem = vi.fn().mockResolvedValue(undefined);
+
 vi.mock('sonner', () => ({
   toast: {
-    info: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
   },
+}));
+
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({ isAuthenticated: true }),
+}));
+
+vi.mock('@/hooks/useCart', () => ({
+  useCart: () => ({ addItem, isAdding: false }),
 }));
 
 const mockProduct: Product = {
@@ -103,18 +113,13 @@ describe('ProductInfo', () => {
     expect(screen.getByText('SKU: MWO-001')).toBeInTheDocument();
   });
 
-  it('shows toast on add to cart click', async () => {
+  it('adds the selected quantity through the real cart mutation', async () => {
     const { toast } = await import('sonner');
     renderWithRouter(<ProductInfo product={mockProduct} />);
+    fireEvent.click(screen.getByLabelText('Increase quantity'));
     fireEvent.click(screen.getByRole('button', { name: /add to cart/i }));
-    expect(toast.info).toHaveBeenCalledWith('Cart coming soon', expect.any(Object));
-  });
-
-  it('shows toast on wishlist click', async () => {
-    const { toast } = await import('sonner');
-    renderWithRouter(<ProductInfo product={mockProduct} />);
-    fireEvent.click(screen.getByRole('button', { name: /wishlist/i }));
-    expect(toast.info).toHaveBeenCalledWith('Wishlist coming soon', expect.any(Object));
+    await waitFor(() => expect(addItem).toHaveBeenCalledWith({ productId: '1', quantity: 2 }));
+    expect(toast.success).toHaveBeenCalledWith('Added to cart');
   });
 });
 

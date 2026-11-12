@@ -51,17 +51,30 @@ export interface Category {
   isActive: boolean;
 }
 
+export interface CartProduct {
+  _id: string;
+  name: string;
+  slug: string;
+  price: number;
+  stock: number;
+  images: string[];
+  isActive: boolean;
+}
+
 export interface CartItem {
   _id: string;
-  product: Product;
-  variant?: string;
+  product: CartProduct | null;
   quantity: number;
   price: number;
+  lineTotal: number;
 }
 
 export interface Cart {
   _id: string;
   items: CartItem[];
+  itemCount: number;
+  subtotal: number;
+  total: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,7 +89,11 @@ export interface Address {
   pincode: string;
   country: string;
   isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+export type AddressInput = Omit<Address, '_id' | 'createdAt' | 'updatedAt'>;
 
 export interface OrderItem {
   product: string;
@@ -94,10 +111,10 @@ export interface Order {
   _id: string;
   orderNumber: string;
   items: OrderItem[];
-  shippingAddress: Address;
+  shippingAddress: Omit<Address, '_id' | 'isDefault' | 'createdAt' | 'updatedAt'>;
   subtotal: number;
   shippingCost: number;
-  discount: number;
+  discount?: number;
   tax: number;
   total: number;
   status: OrderStatus;

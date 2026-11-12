@@ -10,13 +10,15 @@ process.env.MONGODB_URI = 'mongodb://localhost:27017/shopsphere-test';
 process.env.CLIENT_URL = 'http://localhost:5173';
 
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import app from '../app.js';
 
-let mongoServer: MongoMemoryServer;
+let mongoServer: MongoMemoryReplSet;
 
 export async function setupTestDB(): Promise<void> {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: 'wiredTiger' },
+  });
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
 }
