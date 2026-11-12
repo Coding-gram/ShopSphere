@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "repair:candle-image": "tsx src/scripts/repairCandleImage.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

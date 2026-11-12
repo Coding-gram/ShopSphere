@@ -488,6 +488,40 @@ describe('Product API', () => {
         .set('Cookie', adminCookies);
     });
 
+    it('C3b: switches between populated categories without retaining the previous category', async () => {
+      const footwearCategoryId = await seedCategory('Footwear', adminCookies);
+      const beautyCategoryId = await seedCategory('Beauty', adminCookies);
+
+      await Product.create([
+        {
+          name: 'Footwear Switch Product',
+          description: 'A product created to verify category switching remains isolated.',
+          price: 1200,
+          category: footwearCategoryId,
+          stock: 8,
+          sku: 'TST-SWITCH-FOOTWEAR',
+        },
+        {
+          name: 'Beauty Switch Product',
+          description: 'A product created to verify category switching remains isolated.',
+          price: 1400,
+          category: beautyCategoryId,
+          stock: 8,
+          sku: 'TST-SWITCH-BEAUTY',
+        },
+      ]);
+
+      const footwearResponse = await request(app).get('/api/v1/products?category=footwear');
+      const beautyResponse = await request(app).get('/api/v1/products?category=beauty');
+
+      expect(footwearResponse.status).toBe(200);
+      expect(footwearResponse.body.data.map((product: { sku: string }) => product.sku))
+        .toEqual(['TST-SWITCH-FOOTWEAR']);
+      expect(beautyResponse.status).toBe(200);
+      expect(beautyResponse.body.data.map((product: { sku: string }) => product.sku))
+        .toEqual(['TST-SWITCH-BEAUTY']);
+    });
+
     it('C4: sorts by price ascending', async () => {
       const res = await request(app).get('/api/v1/products?sort=price&order=asc');
 

@@ -54,6 +54,7 @@ const mockProducts: Product[] = [
 const mockCategories: Category[] = [
   { _id: 'cat1', name: 'Clothing', slug: 'clothing', isActive: true },
   { _id: 'cat2', name: 'Footwear', slug: 'footwear', isActive: true },
+  { _id: 'cat3', name: 'Beauty', slug: 'beauty', isActive: true },
 ];
 
 const mockPaginatedResponse: PaginatedResponse<Product> = {
@@ -264,6 +265,20 @@ describe('Products page', () => {
       const filters = mockUseProducts.mock.calls.at(-1)?.[0];
       expect(filters).toMatchObject({ page: 1, limit: 12 });
       expect(filters).not.toHaveProperty('category');
+    });
+  });
+
+  it('replaces Footwear with Beauty instead of retaining the prior category', async () => {
+    setupSuccess();
+    renderProducts('/products?category=footwear');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Beauty' }));
+
+    await waitFor(() => {
+      expect(mockUseProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ category: 'beauty', page: 1, limit: 12 })
+      );
+      expect(mockUseProducts.mock.calls.at(-1)?.[0]).not.toHaveProperty('categories');
     });
   });
 

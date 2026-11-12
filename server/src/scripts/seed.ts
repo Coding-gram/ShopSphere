@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
+import { ARTISAN_SCENTED_CANDLE_IMAGE } from './catalogAssets.js';
 
 // ── Sample data ──────────────────────────────────────────────────────────────
 
@@ -161,7 +162,7 @@ async function seed() {
         description: 'Three hand-poured soy wax candles in ceramic vessels. Scents include Bergamot & Cedar, White Tea & Sage, and Amber & Vanilla. 45-hour burn time each.',
         price: 3499,
         category: catMap['Home & Living'],
-        images: ['https://images.unsplash.com/photo-1602607388529-5d73a64ad8a4?w=800'],
+        images: [ARTISAN_SCENTED_CANDLE_IMAGE],
         stock: 60,
         sku: 'SS-HOM-001',
         tags: ['candles', 'home', 'fragrance', 'gift'],
