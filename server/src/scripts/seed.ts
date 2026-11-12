@@ -4,7 +4,7 @@ import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
-import { ARTISAN_SCENTED_CANDLE_IMAGE } from './catalogAssets.js';
+import { ARTISAN_SCENTED_CANDLE_IMAGE, CATALOG_PRODUCT_IMAGES } from './catalogAssets.js';
 
 // ── Sample data ──────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ async function seed() {
         description: 'Luxuriously soft cashmere crew neck sweater in a versatile neutral tone. Lightweight yet warm, with ribbed cuffs and hem. A wardrobe essential that pairs effortlessly with everything.',
         price: 6499,
         category: catMap['Clothing'],
-        images: ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-CLO-002']],
         stock: 40,
         sku: 'SS-CLO-002',
         tags: ['cashmere', 'sweater', 'knitwear'],
@@ -95,7 +95,7 @@ async function seed() {
         description: 'Relaxed yet refined linen trousers with a tailored fit. Features a comfortable elasticated waistband, side pockets, and a clean front pleat. Ideal for warm weather styling.',
         price: 4299,
         category: catMap['Clothing'],
-        images: ['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-CLO-003']],
         stock: 35,
         sku: 'SS-CLO-003',
         tags: ['linen', 'trousers', 'summer'],
@@ -109,7 +109,7 @@ async function seed() {
         price: 8999,
         compareAtPrice: 11499,
         category: catMap['Accessories'],
-        images: ['https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-ACC-001']],
         stock: 15,
         sku: 'SS-ACC-001',
         tags: ['leather', 'tote', 'bag', 'handcrafted'],
@@ -136,7 +136,7 @@ async function seed() {
         price: 15499,
         compareAtPrice: 18999,
         category: catMap['Footwear'],
-        images: ['https://images.unsplash.com/photo-1614252369475-531eba835eb1?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-FTW-001']],
         stock: 20,
         sku: 'SS-FTW-001',
         tags: ['oxford', 'leather', 'formal', 'italian'],
@@ -149,7 +149,7 @@ async function seed() {
         description: 'Elegant suede Chelsea boots with elastic side panels and a pull tab. Crepe sole for comfort. Pairs beautifully with both casual and smart-casual outfits.',
         price: 9999,
         category: catMap['Footwear'],
-        images: ['https://images.unsplash.com/photo-1638247025967-b4e38f787b76?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-FTW-002']],
         stock: 18,
         sku: 'SS-FTW-002',
         tags: ['chelsea', 'suede', 'boots'],
@@ -175,7 +175,7 @@ async function seed() {
         description: 'Minimalist Japanese-inspired ceramic tea set including a teapot and four cups. Matte finish with an organic glaze. A meditative addition to your daily ritual.',
         price: 5999,
         category: catMap['Home & Living'],
-        images: ['https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-HOM-002']],
         stock: 12,
         sku: 'SS-HOM-002',
         tags: ['tea', 'ceramic', 'japanese', 'minimalist'],
@@ -201,7 +201,7 @@ async function seed() {
         description: 'Genuine rose quartz face roller with dual-ended design. Promotes lymphatic drainage, reduces puffiness, and enhances product absorption. Comes in a velvet pouch.',
         price: 1499,
         category: catMap['Beauty'],
-        images: ['https://images.unsplash.com/photo-1612817288484-6f916006741a?w=800'],
+        images: [CATALOG_PRODUCT_IMAGES['SS-BTY-002']],
         stock: 45,
         sku: 'SS-BTY-002',
         tags: ['face-roller', 'skincare', 'beauty-tools'],

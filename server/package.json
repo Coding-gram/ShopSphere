@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx src/scripts/seed.ts",
-    "repair:candle-image": "tsx src/scripts/repairCandleImage.ts"
+    "prerepair:candle-image": "npm run build",
+    "repair:candle-image": "node dist/scripts/repairCandleImage.js",
+    "prerepair:product-images": "npm run build",
+    "repair:product-images": "node dist/scripts/repairProductImages.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
