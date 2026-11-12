@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,6 +20,11 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function Profile() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    document.title = 'My Profile — ShopSphere';
+    return () => { document.title = 'ShopSphere'; };
+  }, []);
 
   const {
     register,

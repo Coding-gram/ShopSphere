@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +23,11 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    document.title = 'Sign In — ShopSphere';
+    return () => { document.title = 'ShopSphere'; };
+  }, []);
 
   const from = (location.state as { from?: string })?.from || '/';
 

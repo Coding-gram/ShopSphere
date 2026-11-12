@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,6 +33,11 @@ export default function Register() {
   const { register: registerUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    document.title = 'Create Account — ShopSphere';
+    return () => { document.title = 'ShopSphere'; };
+  }, []);
 
   const {
     register,

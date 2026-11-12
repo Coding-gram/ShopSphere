@@ -1,32 +1,48 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import StoreLayout from '@/layouts/StoreLayout';
-import Home from '@/pages/Home';
-import Products from '@/pages/Products';
-import ProductDetail from '@/pages/ProductDetail';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import Profile from '@/pages/Profile';
-import NotFound from '@/pages/NotFound';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { Loader } from '@/components/common/Loader';
+
+// Lazy-loaded pages for code splitting
+const Home = lazy(() => import('@/pages/Home'));
+const Products = lazy(() => import('@/pages/Products'));
+const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Loader size="lg" />
+    </div>
+  );
+}
+
+function SuspensePage({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>;
+}
 
 export const router = createBrowserRouter([
   {
     element: <StoreLayout />,
     children: [
-      { index: true, element: <Home /> },
-      { path: 'products', element: <Products /> },
-      { path: 'products/:slug', element: <ProductDetail /> },
-      { path: 'login', element: <Login /> },
-      { path: 'register', element: <Register /> },
+      { index: true, element: <SuspensePage><Home /></SuspensePage> },
+      { path: 'products', element: <SuspensePage><Products /></SuspensePage> },
+      { path: 'products/:slug', element: <SuspensePage><ProductDetail /></SuspensePage> },
+      { path: 'login', element: <SuspensePage><Login /></SuspensePage> },
+      { path: 'register', element: <SuspensePage><Register /></SuspensePage> },
       {
         path: 'profile',
         element: (
           <ProtectedRoute>
-            <Profile />
+            <SuspensePage><Profile /></SuspensePage>
           </ProtectedRoute>
         ),
       },
-      { path: '*', element: <NotFound /> },
+      { path: '*', element: <SuspensePage><NotFound /></SuspensePage> },
     ],
   },
 ]);

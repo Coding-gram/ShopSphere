@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -58,6 +59,11 @@ const trustFeatures = [
 // ── Homepage ──────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  useEffect(() => {
+    document.title = 'ShopSphere — Premium Curated Shopping';
+    return () => { document.title = 'ShopSphere'; };
+  }, []);
+
   const {
     data: featuredResponse,
     isLoading: featuredLoading,

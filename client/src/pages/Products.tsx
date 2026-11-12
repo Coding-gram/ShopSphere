@@ -34,10 +34,19 @@ export default function Products() {
   const selectedCategory = searchParams.get('category') ?? '';
   const selectedSort = searchParams.get('sort') ?? DEFAULT_SORT;
   const currentPage = Number(searchParams.get('page')) || 1;
+  const minPrice = searchParams.get('minPrice') ?? '';
+  const maxPrice = searchParams.get('maxPrice') ?? '';
 
   // Local search input state (debounced before URL sync)
   const [searchInput, setSearchInput] = useState(searchQuery);
   const debouncedSearch = useDebounce(searchInput, 400);
+
+  // ── Page title ────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    document.title = 'Shop All Products — ShopSphere';
+    return () => { document.title = 'ShopSphere'; };
+  }, []);
 
   // ── URL update helpers ────────────────────────────────────────────────────
 
@@ -89,6 +98,8 @@ export default function Products() {
     order: sortOrder,
     ...(debouncedSearch && { search: debouncedSearch }),
     ...(selectedCategory && { category: selectedCategory }),
+    ...(minPrice && { minPrice: Number(minPrice) }),
+    ...(maxPrice && { maxPrice: Number(maxPrice) }),
   };
 
   // ── Fetch data ────────────────────────────────────────────────────────────
@@ -127,6 +138,16 @@ export default function Products() {
     [updateParams]
   );
 
+  const handlePriceChange = useCallback(
+    (min: string, max: string) => {
+      updateParams({
+        minPrice: min || undefined,
+        maxPrice: max || undefined,
+      });
+    },
+    [updateParams]
+  );
+
   const handlePageChange = useCallback(
     (page: number) => {
       updateParams({ page: page > 1 ? String(page) : undefined });
@@ -150,11 +171,31 @@ export default function Products() {
     updateParams({ category: undefined });
   }, [updateParams]);
 
+  const handleRemovePrice = useCallback(() => {
+    updateParams({ minPrice: undefined, maxPrice: undefined });
+  }, [updateParams]);
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasActiveFilters = !!selectedCategory || !!searchQuery;
-  const activeFilterCount = [selectedCategory, searchQuery].filter(Boolean).length;
+  const hasActiveFilters = !!selectedCategory || !!searchQuery || !!minPrice || !!maxPrice;
+  const activeFilterCount = [selectedCategory, searchQuery, (minPrice || maxPrice) ? 'price' : ''].filter(Boolean).length;
   const sortLabel = SORT_OPTIONS.find((o) => o.value === selectedSort)?.label ?? 'Newest';
+
+  // ── Shared filter props ────────────────────────────────────────────────────
+
+  const filterProps = {
+    categories,
+    categoriesLoading,
+    selectedCategory,
+    selectedSort,
+    minPrice,
+    maxPrice,
+    onCategoryChange: handleCategoryChange,
+    onSortChange: handleSortChange,
+    onPriceChange: handlePriceChange,
+    onClearFilters: handleClearFilters,
+    hasActiveFilters,
+  };
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -221,16 +262,7 @@ export default function Products() {
               <SheetTitle className="font-heading text-xl">Filters</SheetTitle>
             </SheetHeader>
             <div className="mt-6">
-              <ProductFilters
-                categories={categories}
-                categoriesLoading={categoriesLoading}
-                selectedCategory={selectedCategory}
-                selectedSort={selectedSort}
-                onCategoryChange={handleCategoryChange}
-                onSortChange={handleSortChange}
-                onClearFilters={handleClearFilters}
-                hasActiveFilters={hasActiveFilters}
-              />
+              <ProductFilters {...filterProps} />
             </div>
           </SheetContent>
         </Sheet>
@@ -241,16 +273,7 @@ export default function Products() {
         {/* Desktop sidebar */}
         <aside className="hidden w-60 shrink-0 lg:block" aria-label="Product filters">
           <div className="sticky top-28">
-            <ProductFilters
-              categories={categories}
-              categoriesLoading={categoriesLoading}
-              selectedCategory={selectedCategory}
-              selectedSort={selectedSort}
-              onCategoryChange={handleCategoryChange}
-              onSortChange={handleSortChange}
-              onClearFilters={handleClearFilters}
-              hasActiveFilters={hasActiveFilters}
-            />
+            <ProductFilters {...filterProps} />
           </div>
         </aside>
 
@@ -266,12 +289,12 @@ export default function Products() {
                     : pagination.total === 1
                       ? '1 product'
                       : `${pagination.total} products`}
-                  {selectedCategory || searchQuery ? ' matching your filters' : ''}
+                  {hasActiveFilters ? ' matching your filters' : ''}
                 </p>
               )}
             </div>
 
-            {/* Desktop sort (visible when sidebar is hidden on smaller screens, or as supplementary) */}
+            {/* Desktop sort (visible when sidebar is hidden on smaller screens) */}
             <p className="text-xs text-muted-foreground lg:hidden">
               Sorted by: <span className="font-medium text-foreground">{sortLabel}</span>
             </p>
@@ -282,8 +305,11 @@ export default function Products() {
             selectedCategory={selectedCategory}
             categories={categories}
             searchQuery={searchQuery}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
             onRemoveCategory={handleRemoveCategory}
             onRemoveSearch={handleRemoveSearch}
+            onRemovePrice={handleRemovePrice}
           />
           {hasActiveFilters && <div className="mb-4" />}
 

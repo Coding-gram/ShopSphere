@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import { useProduct } from '@/hooks/useProducts';
@@ -62,11 +63,23 @@ export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data, isLoading, isError, error, refetch } = useProduct(slug ?? '');
 
+  const product = data?.data;
+
+  // Set page title when product loads
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} — ShopSphere`;
+    } else {
+      document.title = 'Product — ShopSphere';
+    }
+    return () => { document.title = 'ShopSphere'; };
+  }, [product]);
+
   if (isLoading) {
     return <ProductDetailSkeleton />;
   }
 
-  if (isError || !data) {
+  if (isError || !product) {
     const is404 =
       error && 'response' in (error as Record<string, unknown>) &&
       (error as Record<string, unknown> & { response: { status: number } }).response?.status === 404;
@@ -103,7 +116,6 @@ export default function ProductDetail() {
     );
   }
 
-  const product = data.data;
   const categoryName =
     typeof product.category === 'object' && product.category !== null
       ? product.category.name
