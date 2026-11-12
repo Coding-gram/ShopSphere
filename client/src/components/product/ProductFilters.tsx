@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import {
   Select,
@@ -66,21 +66,33 @@ export function ProductFilters({
 }: ProductFiltersProps) {
   const [localMin, setLocalMin] = useState(minPrice);
   const [localMax, setLocalMax] = useState(maxPrice);
+  const [priceError, setPriceError] = useState('');
 
   // Sync local state when props change (e.g. clear filters)
   useEffect(() => {
     setLocalMin(minPrice);
     setLocalMax(maxPrice);
+    setPriceError('');
   }, [minPrice, maxPrice]);
 
-  function handlePriceBlur() {
-    onPriceChange(localMin, localMax);
-  }
+  function handlePriceSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-  function handlePriceKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') {
-      onPriceChange(localMin, localMax);
+    const min = localMin === '' ? undefined : Number(localMin);
+    const max = localMax === '' ? undefined : Number(localMax);
+
+    if ((min !== undefined && (!Number.isFinite(min) || min < 0)) || (max !== undefined && (!Number.isFinite(max) || max < 0))) {
+      setPriceError('Enter valid prices of zero or more.');
+      return;
     }
+
+    if (min !== undefined && max !== undefined && min > max) {
+      setPriceError('Minimum price cannot be greater than maximum price.');
+      return;
+    }
+
+    setPriceError('');
+    onPriceChange(localMin, localMax);
   }
 
   return (
@@ -182,37 +194,56 @@ export function ProductFilters({
         <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Price Range
         </label>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
-            <Input
-              type="number"
-              min={0}
-              placeholder="Min"
-              value={localMin}
-              onChange={(e) => setLocalMin(e.target.value)}
-              onBlur={handlePriceBlur}
-              onKeyDown={handlePriceKeyDown}
-              className="pl-7 text-sm"
-              aria-label="Minimum price"
-            />
+        <form className="space-y-2" onSubmit={handlePriceSubmit} noValidate>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Min"
+                value={localMin}
+                onChange={(e) => {
+                  setLocalMin(e.target.value);
+                  setPriceError('');
+                }}
+                className="pl-7 text-sm"
+                aria-label="Minimum price"
+                aria-invalid={Boolean(priceError)}
+                aria-describedby={priceError ? 'price-range-error' : undefined}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">—</span>
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Max"
+                value={localMax}
+                onChange={(e) => {
+                  setLocalMax(e.target.value);
+                  setPriceError('');
+                }}
+                className="pl-7 text-sm"
+                aria-label="Maximum price"
+                aria-invalid={Boolean(priceError)}
+                aria-describedby={priceError ? 'price-range-error' : undefined}
+              />
+            </div>
           </div>
-          <span className="text-xs text-muted-foreground">—</span>
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
-            <Input
-              type="number"
-              min={0}
-              placeholder="Max"
-              value={localMax}
-              onChange={(e) => setLocalMax(e.target.value)}
-              onBlur={handlePriceBlur}
-              onKeyDown={handlePriceKeyDown}
-              className="pl-7 text-sm"
-              aria-label="Maximum price"
-            />
-          </div>
-        </div>
+          <button
+            type="submit"
+            className="w-full rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-muted"
+          >
+            Apply price range
+          </button>
+          {priceError && (
+            <p id="price-range-error" role="alert" className="text-xs text-destructive">
+              {priceError}
+            </p>
+          )}
+        </form>
       </div>
     </div>
   );

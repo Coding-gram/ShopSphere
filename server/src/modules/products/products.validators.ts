@@ -56,16 +56,22 @@ export const updateProductSchema = z.object({
 });
 
 export const productQuerySchema = z.object({
-  query: z.object({
-    page: z.coerce.number().int().min(1).default(1).optional(),
-    limit: z.coerce.number().int().min(1).max(50).default(12).optional(),
-    sort: z.enum(['price', 'createdAt', 'name', 'avgRating']).default('createdAt').optional(),
-    order: z.enum(['asc', 'desc']).default('desc').optional(),
-    category: z.string().optional(),
-    search: z.string().optional(),
-    minPrice: z.coerce.number().min(0).optional(),
-    maxPrice: z.coerce.number().min(0).optional(),
-    featured: z.coerce.boolean().optional(),
-  }),
+  query: z
+    .object({
+      page: z.coerce.number().int().min(1).default(1).optional(),
+      limit: z.coerce.number().int().min(1).max(50).default(12).optional(),
+      sort: z.enum(['price', 'createdAt', 'name', 'avgRating']).default('createdAt').optional(),
+      order: z.enum(['asc', 'desc']).default('desc').optional(),
+      category: z.string().optional(),
+      search: z.string().optional(),
+      minPrice: z.coerce.number().min(0).optional(),
+      maxPrice: z.coerce.number().min(0).optional(),
+      featured: z.coerce.boolean().optional(),
+    })
+    .refine(
+      ({ minPrice, maxPrice }) =>
+        minPrice === undefined || maxPrice === undefined || minPrice <= maxPrice,
+      { message: 'Minimum price cannot be greater than maximum price', path: ['maxPrice'] },
+    ),
 });
 

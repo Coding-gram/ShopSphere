@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -226,6 +226,58 @@ describe('Products page', () => {
         order: 'desc',
       })
     );
+  });
+
+  it('keeps a zero maximum price bound in the product query', () => {
+    setupSuccess();
+    renderProducts('/products?maxPrice=0');
+
+    expect(mockUseProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ maxPrice: 0 })
+    );
+  });
+
+  it('applies a completed price range explicitly', async () => {
+    setupSuccess();
+    renderProducts();
+
+    const minimumInput = screen.getAllByLabelText('Minimum price')[0];
+    const maximumInput = screen.getAllByLabelText('Maximum price')[0];
+    fireEvent.change(minimumInput, { target: { value: '800' } });
+    fireEvent.change(maximumInput, { target: { value: '2100' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Apply price range' })[0]);
+
+    await waitFor(() => {
+      expect(mockUseProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({ minPrice: 800, maxPrice: 2100 })
+      );
+    });
+  });
+
+  it('returns to the full catalog when All Categories is selected', async () => {
+    setupSuccess();
+    renderProducts('/products?category=clothing&page=2');
+
+    fireEvent.click(screen.getByRole('button', { name: 'All Categories' }));
+
+    await waitFor(() => {
+      const filters = mockUseProducts.mock.calls.at(-1)?.[0];
+      expect(filters).toMatchObject({ page: 1, limit: 12 });
+      expect(filters).not.toHaveProperty('category');
+    });
+  });
+
+  it('shows validation feedback instead of applying an inverted price range', () => {
+    setupSuccess();
+    renderProducts();
+    const queryCountBeforeSubmit = mockUseProducts.mock.calls.length;
+
+    fireEvent.change(screen.getByLabelText('Minimum price'), { target: { value: '2100' } });
+    fireEvent.change(screen.getByLabelText('Maximum price'), { target: { value: '800' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply price range' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Minimum price cannot be greater than maximum price.');
+    expect(mockUseProducts).toHaveBeenCalledTimes(queryCountBeforeSubmit);
   });
 
   it('shows "1 product" singular text', () => {

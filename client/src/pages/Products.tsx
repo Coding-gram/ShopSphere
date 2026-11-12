@@ -24,6 +24,13 @@ import type { ProductFilters as ProductFiltersType } from '@/services/products';
 const DEFAULT_SORT = 'createdAt:desc';
 const PAGE_SIZE = 12;
 
+function parsePriceFilter(value: string): number | undefined {
+  if (value === '') return undefined;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -36,6 +43,8 @@ export default function Products() {
   const currentPage = Number(searchParams.get('page')) || 1;
   const minPrice = searchParams.get('minPrice') ?? '';
   const maxPrice = searchParams.get('maxPrice') ?? '';
+  const parsedMinPrice = parsePriceFilter(minPrice);
+  const parsedMaxPrice = parsePriceFilter(maxPrice);
 
   // Local search input state (debounced before URL sync)
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -98,8 +107,8 @@ export default function Products() {
     order: sortOrder,
     ...(debouncedSearch && { search: debouncedSearch }),
     ...(selectedCategory && { category: selectedCategory }),
-    ...(minPrice && { minPrice: Number(minPrice) }),
-    ...(maxPrice && { maxPrice: Number(maxPrice) }),
+    ...(parsedMinPrice !== undefined && { minPrice: parsedMinPrice }),
+    ...(parsedMaxPrice !== undefined && { maxPrice: parsedMaxPrice }),
   };
 
   // ── Fetch data ────────────────────────────────────────────────────────────

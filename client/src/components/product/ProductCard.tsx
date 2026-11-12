@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { cn, formatPrice } from '@/lib/utils';
@@ -40,7 +41,9 @@ function getProductInitials(name: string): string {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const hasImage = product.images.length > 0;
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const imageUrl = product.images[0];
+  const hasImage = Boolean(imageUrl) && failedImageUrl !== imageUrl;
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
@@ -60,10 +63,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-muted">
         {hasImage ? (
           <img
-            src={product.images[0]}
+            src={imageUrl}
             alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            onError={() => setFailedImageUrl(imageUrl)}
           />
         ) : (
           <div

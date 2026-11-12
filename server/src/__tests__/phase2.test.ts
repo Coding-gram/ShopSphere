@@ -533,6 +533,21 @@ describe('Product API', () => {
         expect(product.price).toBeLessThanOrEqual(2100);
       }
     });
+
+    it('C5c: unknown category filtering never falls back to all products', async () => {
+      const res = await request(app).get('/api/v1/products?category=does-not-exist');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([]);
+      expect(res.body.pagination.total).toBe(0);
+    });
+
+    it('C5d: rejects a price range whose minimum exceeds its maximum', async () => {
+      const res = await request(app).get('/api/v1/products?minPrice=2100&maxPrice=800');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
   });
 
   // ── Featured Products ─────────────────────────────────────────────────

@@ -41,7 +41,7 @@ export async function listProducts(query: ProductQuery) {
 
   if (category) {
     const cat = await Category.findOne({ slug: category });
-    if (cat) filter.category = cat._id;
+    filter.category = cat ? cat._id : { $in: [] };
   }
 
   if (search) {

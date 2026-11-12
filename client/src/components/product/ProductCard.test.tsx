@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import { ProductCard } from './ProductCard';
@@ -65,6 +65,15 @@ describe('ProductCard', () => {
     renderWithRouter(<ProductCard product={noImageProduct} />);
 
     // Should render initials (MW for "Merino Wool")
+    expect(screen.getByText('MW')).toBeInTheDocument();
+    expect(screen.queryByAltText('Merino Wool Overcoat')).not.toBeInTheDocument();
+  });
+
+  it('falls back to initials when the product image fails to load', () => {
+    renderWithRouter(<ProductCard product={mockProduct} />);
+
+    fireEvent.error(screen.getByAltText('Merino Wool Overcoat'));
+
     expect(screen.getByText('MW')).toBeInTheDocument();
     expect(screen.queryByAltText('Merino Wool Overcoat')).not.toBeInTheDocument();
   });
