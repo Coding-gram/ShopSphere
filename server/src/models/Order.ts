@@ -41,6 +41,8 @@ export interface IOrder extends Document {
   shippingCost: number;
   tax: number;
   total: number;
+  checkoutIdempotencyKey?: string;
+  checkoutRequestFingerprint?: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   statusHistory: IOrderStatusHistory[];
@@ -85,6 +87,8 @@ const orderSchema = new Schema<IOrder>(
     shippingCost: { type: Number, required: true, default: 0, min: 0 },
     tax: { type: Number, required: true, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
+    checkoutIdempotencyKey: { type: String, trim: true, minlength: 1, maxlength: 128, immutable: true },
+    checkoutRequestFingerprint: { type: String, match: /^[a-f\d]{64}$/i, immutable: true },
     status: {
       type: String,
       enum: ORDER_STATUSES,
@@ -103,6 +107,10 @@ const orderSchema = new Schema<IOrder>(
 // ── Indexes ──────────────────────────────────────────────────────────────────
 
 orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index(
+  { user: 1, checkoutIdempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { checkoutIdempotencyKey: { $type: 'string' } } },
+);
 // ── Export ────────────────────────────────────────────────────────────────────
 
 export const Order = mongoose.model<IOrder>('Order', orderSchema);

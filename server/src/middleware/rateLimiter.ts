@@ -27,3 +27,16 @@ export const apiLimiter = rateLimit({
     message: 'Too many requests. Please try again after 15 minutes.',
   },
 });
+
+/** Limits customer checkout and payment mutations without weakening test isolation. */
+export const transactionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: isTest ? 10000 : 30,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: {
+    success: false,
+    statusCode: 429,
+    message: 'Too many checkout or payment attempts. Please try again later.',
+  },
+});

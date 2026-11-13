@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import mongoose from 'mongoose';
 import { Address } from '../../models/Address.js';
 import { Cart } from '../../models/Cart.js';
@@ -32,18 +32,58 @@ function toOrderView(order: IOrder) {
   };
 }
 
-export async function placeOrder(userId: string, addressId: string) {
+function checkoutFingerprint(addressId: string): string {
+  return createHash('sha256').update(JSON.stringify({ addressId })).digest('hex');
+}
+
+function isDuplicateKeyError(error: unknown): error is { code: number } {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 11000;
+}
+
+async function findCheckoutReplay(userId: string, idempotencyKey: string, requestFingerprint: string) {
+  const existingOrder = await Order.findOne({ user: userId, checkoutIdempotencyKey: idempotencyKey });
+  if (!existingOrder) return undefined;
+
+  if (existingOrder.checkoutRequestFingerprint !== requestFingerprint) {
+    throw new ApiError(409, 'Idempotency-Key has already been used with a different checkout request');
+  }
+
+  return toOrderView(existingOrder);
+}
+
+export async function placeOrder(userId: string, addressId: string, idempotencyKey: string) {
+  const requestFingerprint = checkoutFingerprint(addressId);
+  const existingOrder = await findCheckoutReplay(userId, idempotencyKey, requestFingerprint);
+  if (existingOrder) return { order: existingOrder, replayed: true };
+
   const session = await mongoose.startSession();
 
   try {
     let result: ReturnType<typeof toOrderView> | undefined;
+    let replayed = false;
 
     await session.withTransaction(async () => {
+      const replayedOrder = await findCheckoutReplay(userId, idempotencyKey, requestFingerprint);
+      if (replayedOrder) {
+        result = replayedOrder;
+        replayed = true;
+        return;
+      }
+
       const cart = await Cart.findOne({ user: userId }).session(session);
       const address = await Address.findOne({ _id: addressId, user: userId }).session(session);
 
       if (!address) throw new ApiError(404, 'Address not found');
-      if (!cart || cart.items.length === 0) throw new ApiError(400, 'Your cart is empty');
+      if (!cart || cart.items.length === 0) {
+        const completedCheckout = await findCheckoutReplay(userId, idempotencyKey, requestFingerprint);
+        if (completedCheckout) {
+          result = completedCheckout;
+          replayed = true;
+          return;
+        }
+
+        throw new ApiError(400, 'Your cart is empty');
+      }
 
       const orderItems = [];
       for (const cartItem of cart.items) {
@@ -92,6 +132,8 @@ export async function placeOrder(userId: string, addressId: string) {
         shippingCost: 0,
         tax: 0,
         total: subtotal,
+        checkoutIdempotencyKey: idempotencyKey,
+        checkoutRequestFingerprint: requestFingerprint,
         status: 'placed',
         paymentStatus: 'pending',
         statusHistory: [{ status: 'placed', timestamp: new Date(), note: 'Order placed' }],
@@ -111,7 +153,13 @@ export async function placeOrder(userId: string, addressId: string) {
     });
 
     if (!result) throw new ApiError(500, 'Order could not be created');
-    return result;
+    return { order: result, replayed };
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error;
+
+    const replayedOrder = await findCheckoutReplay(userId, idempotencyKey, requestFingerprint);
+    if (!replayedOrder) throw error;
+    return { order: replayedOrder, replayed: true };
   } finally {
     await session.endSession();
   }

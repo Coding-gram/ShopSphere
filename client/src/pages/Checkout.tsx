@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, LockKeyhole, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -22,6 +22,7 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>();
   const [order, setOrder] = useState<Order>();
   const [checkoutError, setCheckoutError] = useState<string>();
+  const checkoutIdempotencyKey = useRef<string | undefined>(undefined);
   const placeOrder = useMutation({ mutationFn: checkoutService.placeOrder });
 
   useEffect(() => {
@@ -43,7 +44,11 @@ export default function Checkout() {
 
     setCheckoutError(undefined);
     try {
-      const response = await placeOrder.mutateAsync(selectedAddressId);
+      checkoutIdempotencyKey.current ??= crypto.randomUUID();
+      const response = await placeOrder.mutateAsync({
+        addressId: selectedAddressId,
+        idempotencyKey: checkoutIdempotencyKey.current,
+      });
       setOrder(response.data);
       await queryClient.invalidateQueries({ queryKey: cartQueryKey });
       toast.success('Order placed successfully');

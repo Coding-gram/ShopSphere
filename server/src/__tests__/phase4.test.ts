@@ -252,6 +252,7 @@ describe('Phase 4 checkout API', () => {
     const rejectedTotal = await request(app)
       .post('/api/v1/checkout')
       .set('Cookie', cookies)
+      .set('Idempotency-Key', 'checkout-price-invalid')
       .send({ addressId: address.body.data._id, total: 1 });
     expect(rejectedTotal.status).toBe(400);
 
@@ -261,6 +262,7 @@ describe('Phase 4 checkout API', () => {
     const placed = await request(app)
       .post('/api/v1/checkout')
       .set('Cookie', cookies)
+      .set('Idempotency-Key', 'checkout-price-order')
       .send({ addressId: address.body.data._id });
     expect(placed.status).toBe(201);
 
@@ -309,6 +311,7 @@ describe('Phase 4 checkout API', () => {
     const response = await request(app)
       .post('/api/v1/checkout')
       .set('Cookie', cookies)
+      .set('Idempotency-Key', 'checkout-stale-stock')
       .send({ addressId: address.body.data._id });
 
     expect(response.status).toBe(409);
@@ -336,6 +339,7 @@ describe('Phase 4 checkout API', () => {
     const response = await request(app)
       .post('/api/v1/checkout')
       .set('Cookie', customerCookies)
+      .set('Idempotency-Key', 'checkout-foreign-address')
       .send({ addressId: address.body.data._id });
 
     expect(response.status).toBe(404);

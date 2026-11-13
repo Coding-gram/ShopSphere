@@ -92,17 +92,23 @@ describe('Phase 5.1 persistence foundations', () => {
     await PaymentAttempt.create({
       order: order._id,
       idempotencyKey: 'payment-attempt-1',
+      requestFingerprint: 'a'.repeat(64),
       amount: order.total,
       currency: 'INR',
       provider: 'simulated',
+      resultingOrderStatus: 'placed',
+      resultingPaymentStatus: 'pending',
     });
 
     await expect(PaymentAttempt.create({
       order: order._id,
       idempotencyKey: 'payment-attempt-1',
+      requestFingerprint: 'a'.repeat(64),
       amount: order.total,
       currency: 'INR',
       provider: 'simulated',
+      resultingOrderStatus: 'placed',
+      resultingPaymentStatus: 'pending',
     })).rejects.toMatchObject({ code: 11000 });
 
     const auditEvent = await OrderAuditEvent.create({
