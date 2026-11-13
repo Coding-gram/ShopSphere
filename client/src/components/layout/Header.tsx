@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, LogOut, UserCircle } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, LogOut, UserCircle, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -154,6 +154,12 @@ export default function Header() {
                       Profile
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders" className="cursor-pointer">
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Orders
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -177,7 +183,7 @@ export default function Header() {
       <MobileNav
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
-        links={navLinks}
+        links={isAuthenticated ? [...navLinks, { to: '/orders', label: 'Orders' }] : navLinks}
       />
     </>
   );

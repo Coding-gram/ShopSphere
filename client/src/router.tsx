@@ -13,6 +13,8 @@ const Register = lazy(() => import('@/pages/Register'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Cart = lazy(() => import('@/pages/Cart'));
 const Checkout = lazy(() => import('@/pages/Checkout'));
+const Orders = lazy(() => import('@/pages/Orders'));
+const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function PageFallback() {
@@ -57,6 +59,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <SuspensePage><Checkout /></SuspensePage>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'orders',
+        element: (
+          <ProtectedRoute>
+            <SuspensePage><Orders /></SuspensePage>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'orders/:orderId',
+        element: (
+          <ProtectedRoute>
+            <SuspensePage><OrderDetail /></SuspensePage>
           </ProtectedRoute>
         ),
       },

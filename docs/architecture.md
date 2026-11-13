@@ -60,8 +60,9 @@ Router → Layout → Page → Components → Hooks → API Services → TanStac
 ## Order State Foundation
 
 - Order status is canonical and server-owned: `placed → paid → packed → shipped → delivered`, with cancellation permitted only from `placed` or `paid`.
-- The shared order-state machine rejects every other transition with a conflict error. Payment, cancellation, customer order history, and admin transition routes are future slices.
+- The shared order-state machine rejects every other transition with a conflict error. Customer history and detail routes are ownership-scoped and paginated. Cancellation is a transactional `placed|paid → cancelled` transition that restores each snapshotted item quantity exactly once and records an immutable customer audit event.
 - Checkout continues to reserve stock and create the `placed` order transactionally. It also creates an immutable system audit event; customers have no audit-event write route.
-- `PaymentAttempt` is prepared for a subsequent simulated payment slice. Attempts are immutable in their order, amount, provider, and idempotency key, with a unique `(order, idempotencyKey)` index.
+- `PaymentAttempt` records deterministic simulated payment outcomes. Attempts are immutable in their order, amount, provider, and idempotency key, with a unique `(order, idempotencyKey)` index.
+- A cancellation does not delete an order or alter its payment snapshot. A successful simulated payment remains marked `paid`; refunds are deliberately out of scope until a real payment/refund integration is added.
 - To migrate old statuses, run `cd server; npm run migrate:order-statuses`. The script validates every legacy value before writing, conditionally updates each order atomically, preserves `paymentStatus`, and can be rerun safely. It maps ambiguous unpaid `confirmed` and `processing` statuses to `placed` rather than falsely marking them paid.
 

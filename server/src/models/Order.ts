@@ -43,6 +43,8 @@ export interface IOrder extends Document {
   total: number;
   checkoutIdempotencyKey?: string;
   checkoutRequestFingerprint?: string;
+  cancellationIdempotencyKey?: string;
+  cancellationRequestFingerprint?: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   statusHistory: IOrderStatusHistory[];
@@ -89,6 +91,8 @@ const orderSchema = new Schema<IOrder>(
     total: { type: Number, required: true, min: 0 },
     checkoutIdempotencyKey: { type: String, trim: true, minlength: 1, maxlength: 128, immutable: true },
     checkoutRequestFingerprint: { type: String, match: /^[a-f\d]{64}$/i, immutable: true },
+    cancellationIdempotencyKey: { type: String, trim: true, minlength: 1, maxlength: 128 },
+    cancellationRequestFingerprint: { type: String, match: /^[a-f\d]{64}$/i },
     status: {
       type: String,
       enum: ORDER_STATUSES,
@@ -110,6 +114,10 @@ orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index(
   { user: 1, checkoutIdempotencyKey: 1 },
   { unique: true, partialFilterExpression: { checkoutIdempotencyKey: { $type: 'string' } } },
+);
+orderSchema.index(
+  { user: 1, cancellationIdempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { cancellationIdempotencyKey: { $type: 'string' } } },
 );
 // ── Export ────────────────────────────────────────────────────────────────────
 
