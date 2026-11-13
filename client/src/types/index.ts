@@ -124,6 +124,28 @@ export interface Order {
   updatedAt: string;
 }
 
+export interface AdminOrderCustomer {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+export interface AdminOrder extends Order {
+  customer: AdminOrderCustomer | null;
+}
+
+export type AdminLifecycleStatus = 'packed' | 'shipped' | 'delivered';
+
+export interface AdminOrderFilters {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
 export interface Review {
   _id: string;
   user: { _id: string; name: string; avatar?: string };

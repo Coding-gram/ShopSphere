@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env.js';
+import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import type { UserRole } from '../types/index.js';
@@ -39,6 +40,22 @@ export const requireAdmin = asyncHandler(
 
     if (req.user.role !== 'admin') {
       throw new ApiError(403, 'Access denied. Admin privileges required.');
+    }
+
+    next();
+  },
+);
+
+/** Re-checks persisted admin state before a sensitive administrative mutation. */
+export const requireActiveAdmin = asyncHandler(
+  async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+    if (!req.user) {
+      throw new ApiError(401, 'Not authenticated. Please log in.');
+    }
+
+    const activeAdmin = await User.exists({ _id: req.user._id, role: 'admin', isActive: true });
+    if (!activeAdmin) {
+      throw new ApiError(403, 'An active admin account is required.');
     }
 
     next();

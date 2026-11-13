@@ -1,7 +1,8 @@
-import { Outlet } from 'react-router-dom';
+import { ClipboardList, ExternalLink } from 'lucide-react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export default function AdminLayout() {
-  // Phase 6: Full admin layout with sidebar, stats header, responsive nav
   return (
     <div className="flex min-h-screen bg-muted/30">
       <aside className="hidden w-64 border-r border-border bg-card lg:block">
@@ -9,12 +10,16 @@ export default function AdminLayout() {
           <h2 className="font-heading text-xl font-semibold">ShopSphere</h2>
           <p className="text-xs text-muted-foreground">Admin Dashboard</p>
         </div>
+        <nav className="px-3" aria-label="Admin navigation">
+          <NavLink to="/admin/orders" className={({ isActive }) => cn('flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors hover:bg-muted', isActive ? 'bg-muted text-accent' : 'text-foreground')}><ClipboardList className="h-4 w-4" aria-hidden="true" />Orders</NavLink>
+        </nav>
       </aside>
       <div className="flex-1">
-        <header className="border-b border-border bg-card px-6 py-4">
+        <header className="flex min-h-16 items-center justify-between gap-4 border-b border-border bg-card px-4 py-3 sm:px-6">
           <p className="text-sm text-muted-foreground">Admin Panel</p>
+          <div className="flex items-center gap-4"><NavLink to="/admin/orders" className={({ isActive }) => cn('text-sm font-medium lg:hidden', isActive ? 'text-accent' : 'text-foreground')}>Orders</NavLink><NavLink to="/" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Store <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></NavLink></div>
         </header>
-        <main className="p-6">
+        <main className="p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

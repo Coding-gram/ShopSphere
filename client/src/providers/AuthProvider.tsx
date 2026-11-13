@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.removeQueries({ queryKey: ['cart'] });
     queryClient.removeQueries({ queryKey: ['addresses'] });
     queryClient.removeQueries({ queryKey: ['orders'] });
+    queryClient.removeQueries({ queryKey: ['admin', 'orders'] });
   }, [queryClient]);
 
   const updateProfile = useCallback(async (data: { name?: string; phone?: string }) => {

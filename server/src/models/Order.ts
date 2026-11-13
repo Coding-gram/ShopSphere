@@ -111,6 +111,7 @@ const orderSchema = new Schema<IOrder>(
 // ── Indexes ──────────────────────────────────────────────────────────────────
 
 orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ status: 1, paymentStatus: 1, createdAt: -1 });
 orderSchema.index(
   { user: 1, checkoutIdempotencyKey: 1 },
   { unique: true, partialFilterExpression: { checkoutIdempotencyKey: { $type: 'string' } } },

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import StoreLayout from '@/layouts/StoreLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { AdminRoute } from '@/components/auth/AdminRoute';
 import { Loader } from '@/components/common/Loader';
 
 // Lazy-loaded pages for code splitting
@@ -13,6 +14,9 @@ const Register = lazy(() => import('@/pages/Register'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Cart = lazy(() => import('@/pages/Cart'));
 const Checkout = lazy(() => import('@/pages/Checkout'));
+const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
+const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
+const AdminOrderDetail = lazy(() => import('@/pages/admin/AdminOrderDetail'));
 const Orders = lazy(() => import('@/pages/Orders'));
 const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
@@ -79,6 +83,14 @@ export const router = createBrowserRouter([
         ),
       },
       { path: '*', element: <SuspensePage><NotFound /></SuspensePage> },
+    ],
+  },
+  {
+    path: 'admin',
+    element: <AdminRoute><SuspensePage><AdminLayout /></SuspensePage></AdminRoute>,
+    children: [
+      { path: 'orders', element: <SuspensePage><AdminOrders /></SuspensePage> },
+      { path: 'orders/:orderId', element: <SuspensePage><AdminOrderDetail /></SuspensePage> },
     ],
   },
 ]);
