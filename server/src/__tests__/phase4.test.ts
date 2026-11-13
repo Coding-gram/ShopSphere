@@ -4,6 +4,7 @@ import { app, clearCollections, setupTestDB, teardownTestDB } from './setup.js';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
 import { Order } from '../models/Order.js';
+import { OrderAuditEvent } from '../models/OrderAuditEvent.js';
 
 async function registerCustomer(email: string): Promise<string[]> {
   const response = await request(app)
@@ -266,7 +267,9 @@ describe('Phase 4 checkout API', () => {
     expect(placed.body.data).toMatchObject({
       subtotal: 2400,
       total: 2400,
+      status: 'placed',
       paymentStatus: 'pending',
+      statusHistory: [expect.objectContaining({ status: 'placed' })],
       items: [{ product: product._id.toString(), quantity: 2, price: 1200 }],
       shippingAddress: addressInput,
     });
@@ -275,6 +278,9 @@ describe('Phase 4 checkout API', () => {
     const persistedOrder = await Order.findOne({ orderNumber: placed.body.data.orderNumber });
     expect(persistedOrder?.subtotal).toBe(2400);
     expect(persistedOrder?.items[0].price).toBe(1200);
+    expect(await OrderAuditEvent.find({ order: persistedOrder?._id }).lean()).toMatchObject([
+      { actorType: 'system', eventType: 'order_placed', toStatus: 'placed' },
+    ]);
 
     const cart = await request(app).get('/api/v1/cart').set('Cookie', cookies).expect(200);
     expect(cart.body.data).toMatchObject({ items: [], itemCount: 0, total: 0 });

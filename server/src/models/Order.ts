@@ -1,5 +1,11 @@
 import mongoose, { type Document, Schema } from 'mongoose';
 
+export const ORDER_STATUSES = ['placed', 'paid', 'packed', 'shipped', 'delivered', 'cancelled'] as const;
+export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'] as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
 // ── Sub-document: Order Item ─────────────────────────────────────────────────
 
 export interface IOrderItem {
@@ -12,8 +18,11 @@ export interface IOrderItem {
 
 // ── Interface ────────────────────────────────────────────────────────────────
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export interface IOrderStatusHistory {
+  status: OrderStatus;
+  timestamp: Date;
+  note?: string;
+}
 
 export interface IOrder extends Document {
   user: mongoose.Types.ObjectId;
@@ -34,7 +43,7 @@ export interface IOrder extends Document {
   total: number;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
-  statusHistory: { status: OrderStatus; timestamp: Date; note?: string }[];
+  statusHistory: IOrderStatusHistory[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +60,12 @@ const orderItemSchema = new Schema<IOrderItem>(
   },
   { _id: false },
 );
+
+const orderStatusHistorySchema = new Schema<IOrderStatusHistory>({
+  status: { type: String, required: true, enum: ORDER_STATUSES },
+  timestamp: { type: Date, default: Date.now },
+  note: { type: String, trim: true, maxlength: 500 },
+});
 
 const orderSchema = new Schema<IOrder>(
   {
@@ -72,19 +87,15 @@ const orderSchema = new Schema<IOrder>(
     total: { type: Number, required: true, min: 0 },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
-      default: 'pending',
+      enum: ORDER_STATUSES,
+      default: 'placed',
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: PAYMENT_STATUSES,
       default: 'pending',
     },
-    statusHistory: [{
-      status: { type: String, required: true },
-      timestamp: { type: Date, default: Date.now },
-      note: { type: String },
-    }],
+    statusHistory: { type: [orderStatusHistorySchema], required: true },
   },
   { timestamps: true },
 );

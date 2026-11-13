@@ -104,7 +104,7 @@ export interface OrderItem {
   price: number;
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'placed' | 'paid' | 'packed' | 'shipped' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
 export interface Order {

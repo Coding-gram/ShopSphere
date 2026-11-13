@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { Address } from '../../models/Address.js';
 import { Cart } from '../../models/Cart.js';
 import { Order, type IOrder } from '../../models/Order.js';
+import { OrderAuditEvent } from '../../models/OrderAuditEvent.js';
 import { Product } from '../../models/Product.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { MAX_CART_ITEM_QUANTITY } from '../cart/cart.validators.js';
@@ -91,9 +92,17 @@ export async function placeOrder(userId: string, addressId: string) {
         shippingCost: 0,
         tax: 0,
         total: subtotal,
-        status: 'pending',
+        status: 'placed',
         paymentStatus: 'pending',
-        statusHistory: [{ status: 'pending', timestamp: new Date(), note: 'Order placed' }],
+        statusHistory: [{ status: 'placed', timestamp: new Date(), note: 'Order placed' }],
+      }], { session });
+
+      await OrderAuditEvent.create([{
+        order: order._id,
+        actorType: 'system',
+        eventType: 'order_placed',
+        toStatus: 'placed',
+        note: 'Order created by checkout.',
       }], { session });
 
       cart.items = [];

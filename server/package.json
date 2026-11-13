@@ -13,7 +13,9 @@
     "prerepair:candle-image": "npm run build",
     "repair:candle-image": "node dist/scripts/repairCandleImage.js",
     "prerepair:product-images": "npm run build",
-    "repair:product-images": "node dist/scripts/repairProductImages.js"
+    "repair:product-images": "node dist/scripts/repairProductImages.js",
+    "premigrate:order-statuses": "npm run build",
+    "migrate:order-statuses": "node dist/scripts/migrateOrderStatuses.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
