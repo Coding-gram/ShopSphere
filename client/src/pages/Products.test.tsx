@@ -238,6 +238,15 @@ describe('Products page', () => {
     );
   });
 
+  it('passes featured and sale collection filters from the URL to the catalog query', () => {
+    setupSuccess();
+    renderProducts('/products?featured=true&sale=true');
+
+    expect(mockUseProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ featured: true, sale: true })
+    );
+  });
+
   it('applies a completed price range explicitly', async () => {
     setupSuccess();
     renderProducts();

@@ -11,6 +11,7 @@ export interface ProductFilters {
   minPrice?: number;
   maxPrice?: number;
   featured?: boolean;
+  sale?: boolean;
 }
 
 export const productService = {
@@ -25,6 +26,7 @@ export const productService = {
     if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
     if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
     if (filters.featured) params.set('featured', 'true');
+    if (filters.sale) params.set('sale', 'true');
 
     const query = params.toString();
     return api.get<unknown, PaginatedResponse<Product>>(

@@ -123,7 +123,7 @@ export default function Home() {
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
             </Link>
             <Link
-              to="/products?sort=createdAt&order=desc"
+              to="/products?sort=createdAt:desc"
               className="inline-flex items-center gap-2 rounded-md border border-on-primary/20 px-7 py-3 text-sm font-semibold text-on-primary transition-colors duration-200 hover:border-on-primary/40 hover:bg-on-primary/5"
             >
               New Arrivals

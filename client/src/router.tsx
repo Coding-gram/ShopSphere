@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import StoreLayout from '@/layouts/StoreLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AdminRoute } from '@/components/auth/AdminRoute';
@@ -46,6 +46,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <SuspensePage><Home /></SuspensePage> },
       { path: 'products', element: <SuspensePage><Products /></SuspensePage> },
+      { path: 'category/new-arrivals', element: <Navigate to="/products?sort=createdAt:desc" replace /> },
+      { path: 'category/featured', element: <Navigate to="/products?featured=true" replace /> },
+      { path: 'category/sale', element: <Navigate to="/products?sale=true" replace /> },
       { path: 'products/:slug', element: <SuspensePage><ProductDetail /></SuspensePage> },
       { path: 'login', element: <SuspensePage><Login /></SuspensePage> },
       { path: 'register', element: <SuspensePage><Register /></SuspensePage> },

@@ -598,6 +598,20 @@ describe('Product API', () => {
     });
   });
 
+  describe('GET /api/v1/products?sale=true', () => {
+    it('C6b: returns only products whose compare-at price exceeds their current price', async () => {
+      const res = await request(app).get('/api/v1/products?sale=true');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toEqual(expect.arrayContaining([
+        expect.objectContaining({ name: 'Product Alpha' }),
+      ]));
+      for (const product of res.body.data) {
+        expect(product.compareAtPrice).toBeGreaterThan(product.price);
+      }
+    });
+  });
+
   // ── Product Detail ────────────────────────────────────────────────────
 
   describe('GET /api/v1/products/:slug', () => {

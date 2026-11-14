@@ -43,6 +43,8 @@ export default function Products() {
   const currentPage = Number(searchParams.get('page')) || 1;
   const minPrice = searchParams.get('minPrice') ?? '';
   const maxPrice = searchParams.get('maxPrice') ?? '';
+  const featured = searchParams.get('featured') === 'true';
+  const sale = searchParams.get('sale') === 'true';
   const parsedMinPrice = parsePriceFilter(minPrice);
   const parsedMaxPrice = parsePriceFilter(maxPrice);
 
@@ -109,6 +111,8 @@ export default function Products() {
     ...(selectedCategory && { category: selectedCategory }),
     ...(parsedMinPrice !== undefined && { minPrice: parsedMinPrice }),
     ...(parsedMaxPrice !== undefined && { maxPrice: parsedMaxPrice }),
+    ...(featured && { featured: true }),
+    ...(sale && { sale: true }),
   };
 
   // ── Fetch data ────────────────────────────────────────────────────────────
@@ -186,8 +190,8 @@ export default function Products() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const hasActiveFilters = !!selectedCategory || !!searchQuery || !!minPrice || !!maxPrice;
-  const activeFilterCount = [selectedCategory, searchQuery, (minPrice || maxPrice) ? 'price' : ''].filter(Boolean).length;
+  const hasActiveFilters = !!selectedCategory || !!searchQuery || !!minPrice || !!maxPrice || featured || sale;
+  const activeFilterCount = [selectedCategory, searchQuery, (minPrice || maxPrice) ? 'price' : '', featured ? 'featured' : '', sale ? 'sale' : ''].filter(Boolean).length;
   const sortLabel = SORT_OPTIONS.find((o) => o.value === selectedSort)?.label ?? 'Newest';
 
   // ── Shared filter props ────────────────────────────────────────────────────
@@ -216,7 +220,11 @@ export default function Products() {
           Collection
         </p>
         <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
-          {selectedCategory
+          {sale
+            ? 'Sale'
+            : featured
+              ? 'Featured Products'
+              : selectedCategory
             ? categories.find((c) => c.slug === selectedCategory)?.name ?? 'Products'
             : 'All Products'}
         </h1>

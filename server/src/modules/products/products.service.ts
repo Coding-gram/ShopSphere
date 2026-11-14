@@ -14,6 +14,7 @@ interface ProductQuery {
   minPrice?: number;
   maxPrice?: number;
   featured?: boolean;
+  sale?: boolean;
 }
 
 interface AdminProductQuery {
@@ -38,6 +39,7 @@ export async function listProducts(query: ProductQuery) {
     minPrice: rawMinPrice,
     maxPrice: rawMaxPrice,
     featured,
+    sale,
   } = query;
 
   // Coerce query params to numbers (they arrive as strings from Express)
@@ -66,6 +68,10 @@ export async function listProducts(query: ProductQuery) {
 
   if (featured !== undefined) {
     filter.isFeatured = featured;
+  }
+
+  if (sale) {
+    filter.$expr = { $gt: ['$compareAtPrice', '$price'] };
   }
 
   const sortObj: Record<string, 1 | -1> = { [sort]: order === 'asc' ? 1 : -1 };
