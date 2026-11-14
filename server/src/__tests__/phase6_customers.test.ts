@@ -12,11 +12,13 @@ describe('Phase 6 customer management', () => {
   it('paginates allowlisted customer records and supplies account order summaries', async () => {
     const { cookies } = await createAdmin();
     const first = await customer('Asha Customer', 'asha.customer@example.com');
+    await User.updateOne({ _id: first._id }, { $set: { phone: '9876543210' } });
     await customer('Bela Customer', 'bela.customer@example.com');
     await Order.create({ user: first._id, orderNumber: 'ORD-CUSTOMER-1', items: [{ product: first._id, name: 'Item', image: '', quantity: 1, price: 500 }], shippingAddress: { fullName: 'Asha', phone: '9876543210', street: 'Road', city: 'Pune', state: 'MH', pincode: '411001', country: 'India' }, subtotal: 500, shippingCost: 0, tax: 0, total: 500, status: 'paid', paymentStatus: 'paid', statusHistory: [{ status: 'paid', timestamp: new Date() }] });
     const list = await request(app).get('/api/v1/admin/customers?page=1&limit=1&search=asha').set('Cookie', cookies).expect(200);
     expect(list.body.data).toEqual([expect.objectContaining({ _id: first._id.toString(), email: 'asha.customer@example.com', orderSummary: { totalOrders: 1, paidOrderTotal: 500 } })]);
     expect(list.body.data[0]).not.toHaveProperty('password');
+    expect(list.body.data[0]).not.toHaveProperty('phone');
     const detail = await request(app).get(`/api/v1/admin/customers/${first._id}`).set('Cookie', cookies).expect(200);
     expect(detail.body.data.orderSummary).toMatchObject({ totalOrders: 1, paidOrderTotal: 500 });
   });
