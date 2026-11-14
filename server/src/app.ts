@@ -22,6 +22,7 @@ import paymentRoutes from './modules/payments/payments.routes.js';
 import orderRoutes from './modules/orders/orders.routes.js';
 import adminOrderRoutes from './modules/orders/adminOrders.routes.js';
 import adminDashboardRoutes from './modules/admin/dashboard.routes.js';
+import adminDataResetRoutes from './modules/admin/dataReset.routes.js';
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/orders', paymentRoutes);
 app.use('/api/v1/admin/orders', adminOrderRoutes);
 app.use('/api/v1/admin/dashboard', adminDashboardRoutes);
+app.use('/api/v1/admin/data', adminDataResetRoutes);
 app.use('/api/v1/admin/products', adminProductRoutes);
 app.use('/api/v1/admin/categories', adminCategoryRoutes);
 app.use('/api/v1/admin/inventory', inventoryRoutes);

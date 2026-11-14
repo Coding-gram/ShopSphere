@@ -1,10 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AdminDashboard from './AdminDashboard';
 
 const { mockUseAdminDashboard } = vi.hoisted(() => ({ mockUseAdminDashboard: vi.fn() }));
 vi.mock('@/hooks/useAdminDashboard', () => ({ useAdminDashboard: () => mockUseAdminDashboard() }));
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return <QueryClientProvider client={qc}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>;
+}
 
 describe('AdminDashboard', () => {
   it('renders server-derived metrics and recent orders', () => {
@@ -18,19 +24,20 @@ describe('AdminDashboard', () => {
       isError: false,
     });
 
-    render(<MemoryRouter><AdminDashboard /></MemoryRouter>);
+    render(<AdminDashboard />, { wrapper });
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('Revenue')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Order status' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view order ord-1001/i })).toHaveAttribute('href', '/admin/orders/order-1');
+    expect(screen.getByRole('button', { name: /clear all data/i })).toBeInTheDocument();
   });
 
   it('renders accessible loading and empty states', () => {
     mockUseAdminDashboard.mockReturnValue({ dashboard: undefined, isLoading: true, isError: false });
-    const { rerender } = render(<MemoryRouter><AdminDashboard /></MemoryRouter>);
+    const { rerender } = render(<AdminDashboard />, { wrapper });
     expect(screen.getByLabelText('Loading dashboard')).toBeInTheDocument();
     mockUseAdminDashboard.mockReturnValue({ dashboard: { metrics: { totalOrders: 0, paidOrders: 0, revenue: 0, averageOrderValue: 0 }, statusCounts: {}, recentOrders: [] }, isLoading: false, isError: false });
-    rerender(<MemoryRouter><AdminDashboard /></MemoryRouter>);
+    rerender(<AdminDashboard />);
     expect(screen.getByText('No orders yet')).toBeInTheDocument();
   });
 });
