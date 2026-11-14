@@ -13,6 +13,7 @@ import adminProductRoutes from './modules/products/adminProducts.routes.js';
 import categoryRoutes from './modules/categories/categories.routes.js';
 import adminCategoryRoutes from './modules/categories/adminCategories.routes.js';
 import inventoryRoutes from './modules/inventory/inventory.routes.js';
+import adminCustomerRoutes from './modules/customers/adminCustomers.routes.js';
 import cartRoutes from './modules/cart/cart.routes.js';
 import addressRoutes from './modules/addresses/addresses.routes.js';
 import checkoutRoutes from './modules/checkout/checkout.routes.js';
@@ -53,6 +54,7 @@ app.use('/api/v1/admin/dashboard', adminDashboardRoutes);
 app.use('/api/v1/admin/products', adminProductRoutes);
 app.use('/api/v1/admin/categories', adminCategoryRoutes);
 app.use('/api/v1/admin/inventory', inventoryRoutes);
+app.use('/api/v1/admin/customers', adminCustomerRoutes);
 
 // ── 404 handler for unknown routes ──────────────────────────────────────────
 app.all('/{*path}', (req, _res, next) => {

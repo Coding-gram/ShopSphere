@@ -162,6 +162,20 @@ export interface AdminDashboard {
   recentOrders: AdminDashboardOrder[];
 }
 
+export interface AdminCustomer {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  orderSummary: { totalOrders: number; paidOrderTotal: number };
+}
+
+export interface AdminCustomerFilters { page?: number; limit?: number; search?: string; isActive?: boolean; }
+
 export interface Review {
   _id: string;
   user: { _id: string; name: string; avatar?: string };

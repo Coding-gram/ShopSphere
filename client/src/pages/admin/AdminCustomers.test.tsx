@@ -1,0 +1,7 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import AdminCustomers from './AdminCustomers';
+const { mockUseAdminCustomers } = vi.hoisted(() => ({ mockUseAdminCustomers: vi.fn() }));
+vi.mock('@/hooks/useAdminCustomers', () => ({ useAdminCustomers: (...args: unknown[]) => mockUseAdminCustomers(...args) }));
+describe('AdminCustomers', () => { it('renders customers and accessible empty/loading states', () => { mockUseAdminCustomers.mockReturnValue({ customers: [], isLoading: true, isError: false }); const { rerender } = render(<MemoryRouter><AdminCustomers /></MemoryRouter>); expect(screen.getByLabelText('Loading customers')).toBeInTheDocument(); mockUseAdminCustomers.mockReturnValue({ customers: [], isLoading: false, isError: false }); rerender(<MemoryRouter><AdminCustomers /></MemoryRouter>); expect(screen.getByText('No customers found')).toBeInTheDocument(); mockUseAdminCustomers.mockReturnValue({ customers: [{ _id: 'customer-1', name: 'Asha Customer', email: 'asha@example.com', isActive: true, createdAt: '', updatedAt: '', orderSummary: { totalOrders: 2, paidOrderTotal: 1200 } }], isLoading: false, isError: false }); rerender(<MemoryRouter><AdminCustomers /></MemoryRouter>); expect(screen.getByText('Asha Customer')).toBeInTheDocument(); expect(screen.getByRole('link', { name: /view customer asha customer/i })).toHaveAttribute('href', '/admin/customers/customer-1'); }); });
