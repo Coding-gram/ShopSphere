@@ -26,6 +26,7 @@ const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
 const AdminOrderDetail = lazy(() => import('@/pages/admin/AdminOrderDetail'));
 const Orders = lazy(() => import('@/pages/Orders'));
 const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
+const StoreInfo = lazy(() => import('@/pages/StoreInfo'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function PageFallback() {
@@ -50,6 +51,16 @@ export const router = createBrowserRouter([
       { path: 'category/featured', element: <Navigate to="/products?featured=true" replace /> },
       { path: 'category/sale', element: <Navigate to="/products?sale=true" replace /> },
       { path: 'products/:slug', element: <SuspensePage><ProductDetail /></SuspensePage> },
+      { path: 'contact', element: <SuspensePage><StoreInfo page="contact" /></SuspensePage> },
+      { path: 'shipping', element: <SuspensePage><StoreInfo page="shipping" /></SuspensePage> },
+      { path: 'faq', element: <SuspensePage><StoreInfo page="faq" /></SuspensePage> },
+      { path: 'size-guide', element: <SuspensePage><StoreInfo page="size-guide" /></SuspensePage> },
+      { path: 'about', element: <SuspensePage><StoreInfo page="about" /></SuspensePage> },
+      { path: 'careers', element: <SuspensePage><StoreInfo page="careers" /></SuspensePage> },
+      { path: 'sustainability', element: <SuspensePage><StoreInfo page="sustainability" /></SuspensePage> },
+      { path: 'press', element: <SuspensePage><StoreInfo page="press" /></SuspensePage> },
+      { path: 'privacy', element: <SuspensePage><StoreInfo page="privacy" /></SuspensePage> },
+      { path: 'terms', element: <SuspensePage><StoreInfo page="terms" /></SuspensePage> },
       { path: 'login', element: <SuspensePage><Login /></SuspensePage> },
       { path: 'register', element: <SuspensePage><Register /></SuspensePage> },
       {
