@@ -5,6 +5,7 @@ import { User } from '../models/User.js';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
 import { ARTISAN_SCENTED_CANDLE_IMAGE, CATALOG_PRODUCT_IMAGES } from './catalogAssets.js';
+import { catalogAdditions } from './catalogAdditions.js';
 
 // ── Sample data ──────────────────────────────────────────────────────────────
 
@@ -223,6 +224,10 @@ async function seed() {
         avgRating: 4.5,
         reviewCount: 89,
       },
+      ...catalogAdditions.map(({ categoryName, ...product }) => ({
+        ...product,
+        category: catMap[categoryName],
+      })),
     ];
 
     // Create products one by one so pre-save hooks generate slugs
