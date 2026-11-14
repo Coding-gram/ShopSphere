@@ -18,6 +18,7 @@ const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminProducts = lazy(() => import('@/pages/admin/AdminProducts'));
 const AdminCategories = lazy(() => import('@/pages/admin/AdminCategories'));
+const AdminInventory = lazy(() => import('@/pages/admin/AdminInventory'));
 const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
 const AdminOrderDetail = lazy(() => import('@/pages/admin/AdminOrderDetail'));
 const Orders = lazy(() => import('@/pages/Orders'));
@@ -95,6 +96,7 @@ export const router = createBrowserRouter([
       { index: true, element: <SuspensePage><AdminDashboard /></SuspensePage> },
       { path: 'products', element: <SuspensePage><AdminProducts /></SuspensePage> },
       { path: 'categories', element: <SuspensePage><AdminCategories /></SuspensePage> },
+      { path: 'inventory', element: <SuspensePage><AdminInventory /></SuspensePage> },
       { path: 'orders', element: <SuspensePage><AdminOrders /></SuspensePage> },
       { path: 'orders/:orderId', element: <SuspensePage><AdminOrderDetail /></SuspensePage> },
     ],

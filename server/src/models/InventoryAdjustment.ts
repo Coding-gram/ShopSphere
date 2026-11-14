@@ -1,0 +1,8 @@
+import mongoose, { type Document, Schema } from 'mongoose';
+
+export interface IInventoryAdjustment extends Document { product: mongoose.Types.ObjectId; actor: mongoose.Types.ObjectId; delta: number; reason: string; previousQuantity: number; newQuantity: number; createdAt: Date; updatedAt: Date; }
+const schema = new Schema<IInventoryAdjustment>({ product: { type: Schema.Types.ObjectId, ref: 'Product', required: true, immutable: true }, actor: { type: Schema.Types.ObjectId, ref: 'User', required: true, immutable: true }, delta: { type: Number, required: true, min: -100000, max: 100000, immutable: true, validate: [(value: number) => value !== 0, 'Adjustment must change stock'] }, reason: { type: String, required: true, trim: true, minlength: 3, maxlength: 300, immutable: true }, previousQuantity: { type: Number, required: true, min: 0, immutable: true }, newQuantity: { type: Number, required: true, min: 0, immutable: true } }, { timestamps: true });
+function immutable(): never { throw new Error('Inventory adjustments are immutable'); }
+schema.pre('save', function () { if (!this.isNew) immutable(); }); schema.pre('updateOne', immutable); schema.pre('updateMany', immutable); schema.pre('findOneAndUpdate', immutable); schema.pre('deleteOne', immutable); schema.pre('deleteMany', immutable);
+schema.index({ product: 1, createdAt: -1 }); schema.index({ actor: 1, createdAt: -1 });
+export const InventoryAdjustment = mongoose.model<IInventoryAdjustment>('InventoryAdjustment', schema);

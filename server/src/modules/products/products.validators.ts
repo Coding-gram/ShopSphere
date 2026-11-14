@@ -47,12 +47,11 @@ export const updateProductSchema = z.object({
         }),
       )
       .optional(),
-    stock: z.number().int().min(0).optional(),
     sku: z.string().trim().min(1).max(50).optional(),
     tags: z.array(z.string().trim()).optional(),
     isActive: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
-  }),
+  }).strict(),
 });
 
 export const productQuerySchema = z.object({
