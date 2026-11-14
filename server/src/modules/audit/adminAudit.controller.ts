@@ -1,0 +1,2 @@
+import type { Request, Response } from 'express'; import { asyncHandler } from '../../utils/asyncHandler.js'; import { listAdminAuditEvents, type AuditQuery } from './adminAudit.service.js';
+export const listAuditEvents = asyncHandler(async (req: Request, res: Response) => { const result = await listAdminAuditEvents(req.query as AuditQuery); res.status(200).json({ success: true, statusCode: 200, message: 'Admin audit events retrieved', data: result.items, pagination: result.pagination }); });

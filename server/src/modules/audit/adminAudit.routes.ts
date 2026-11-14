@@ -1,0 +1,2 @@
+import { Router } from 'express'; import { protect, requireAdmin } from '../../middleware/auth.js'; import { validate } from '../../middleware/validate.js'; import { listAuditEvents } from './adminAudit.controller.js'; import { listAdminAuditSchema } from './adminAudit.validators.js';
+const router = Router(); router.get('/', protect, requireAdmin, validate(listAdminAuditSchema), listAuditEvents); export default router;

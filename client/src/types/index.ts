@@ -176,6 +176,11 @@ export interface AdminCustomer {
 
 export interface AdminCustomerFilters { page?: number; limit?: number; search?: string; isActive?: boolean; }
 
+export type AuditActorType = 'customer' | 'admin' | 'system';
+export type OrderAuditEventType = 'order_placed' | 'order_status_changed' | 'payment_attempted' | 'payment_succeeded' | 'payment_failed' | 'order_cancelled' | 'legacy_status_migrated';
+export interface AdminAuditEvent { _id: string; entity: { type: 'order'; _id: string; orderNumber: string }; eventType: OrderAuditEventType; actor: { type: AuditActorType; _id?: string; name?: string }; fromStatus?: OrderStatus; toStatus?: OrderStatus; note?: string; createdAt: string; }
+export interface AdminAuditFilters { page?: number; limit?: number; entity?: 'order'; actorType?: AuditActorType; eventType?: OrderAuditEventType; dateFrom?: string; dateTo?: string; }
+
 export interface Review {
   _id: string;
   user: { _id: string; name: string; avatar?: string };
