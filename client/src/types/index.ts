@@ -146,6 +146,22 @@ export interface AdminOrderFilters {
   search?: string;
 }
 
+export interface AdminDashboardOrder {
+  _id: string;
+  orderNumber: string;
+  total: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
+  customer: AdminOrderCustomer | null;
+}
+
+export interface AdminDashboard {
+  metrics: { totalOrders: number; paidOrders: number; revenue: number; averageOrderValue: number };
+  statusCounts: Partial<Record<OrderStatus, number>>;
+  recentOrders: AdminDashboardOrder[];
+}
+
 export interface Review {
   _id: string;
   user: { _id: string; name: string; avatar?: string };
