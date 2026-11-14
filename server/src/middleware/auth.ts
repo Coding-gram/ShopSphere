@@ -22,10 +22,18 @@ export const protect = asyncHandler(
 
     const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
 
+    const user = await User.findById(decoded._id)
+      .select('_id role email isActive')
+      .lean();
+
+    if (!user || !user.isActive) {
+      throw new ApiError(403, 'This account is inactive or no longer available.');
+    }
+
     req.user = {
-      _id: decoded._id,
-      role: decoded.role,
-      email: decoded.email,
+      _id: user._id.toString(),
+      role: user.role as UserRole,
+      email: user.email,
     };
 
     next();
