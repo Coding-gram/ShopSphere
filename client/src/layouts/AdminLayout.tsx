@@ -1,5 +1,6 @@
 import { Boxes, ClipboardClock, ClipboardList, ExternalLink, FolderTree, LayoutDashboard, Package, UsersRound } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function AdminLayout() {
@@ -28,6 +29,7 @@ export default function AdminLayout() {
         <main className="p-4 sm:p-6">
           <Outlet />
         </main>
+        <Toaster position="bottom-right" />
       </div>
     </div>
   );
