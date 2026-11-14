@@ -49,8 +49,48 @@
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .admin-workspace table tbody tr {
+    transition: background-color 160ms ease;
+  }
+  .admin-workspace table tbody tr:hover {
+    background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+  }
+  .admin-workspace select,
+  .admin-workspace textarea {
+    border-color: var(--color-input);
+    border-radius: var(--radius-md);
+    background: var(--color-background);
+    color: var(--color-foreground);
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .admin-workspace select:hover,
+  .admin-workspace textarea:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-input));
+  }
+  .admin-workspace select:focus-visible,
+  .admin-workspace textarea:focus-visible {
+    border-color: var(--color-accent);
+    outline: 2px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    outline-offset: 1px;
   }
 }

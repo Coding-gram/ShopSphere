@@ -12,6 +12,7 @@ export interface ProductFilters {
   maxPrice?: number;
   featured?: boolean;
   sale?: boolean;
+  newArrivals?: boolean;
 }
 
 export const productService = {
@@ -27,6 +28,7 @@ export const productService = {
     if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
     if (filters.featured) params.set('featured', 'true');
     if (filters.sale) params.set('sale', 'true');
+    if (filters.newArrivals) params.set('newArrivals', 'true');
 
     const query = params.toString();
     return api.get<unknown, PaginatedResponse<Product>>(

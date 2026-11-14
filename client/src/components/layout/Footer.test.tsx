@@ -7,7 +7,7 @@ describe('Footer', () => {
   it('sends collection links to catalog filters instead of missing category routes', () => {
     render(<MemoryRouter><Footer /></MemoryRouter>);
 
-    expect(screen.getByRole('link', { name: 'New Arrivals' })).toHaveAttribute('href', '/products?sort=createdAt:desc');
+    expect(screen.getByRole('link', { name: 'New Arrivals' })).toHaveAttribute('href', '/products?newArrivals=true&sort=createdAt:desc');
     expect(screen.getByRole('link', { name: 'Featured' })).toHaveAttribute('href', '/products?featured=true');
     expect(screen.getByRole('link', { name: 'Sale' })).toHaveAttribute('href', '/products?sale=true');
   });

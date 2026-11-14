@@ -11,8 +11,9 @@ import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 import { cartQueryKey, useCart } from '@/hooks/useCart';
 import { useAddresses } from '@/hooks/useAddresses';
 import { checkoutService } from '@/services/checkout';
+import { paymentService } from '@/services/payments';
 import { formatPrice } from '@/lib/utils';
-import type { Order } from '@/types';
+import type { Order, SimulatedPaymentOutcome } from '@/types';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -22,8 +23,11 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>();
   const [order, setOrder] = useState<Order>();
   const [checkoutError, setCheckoutError] = useState<string>();
+  const [paymentError, setPaymentError] = useState<string>();
   const checkoutIdempotencyKey = useRef<string | undefined>(undefined);
+  const paymentIdempotencyKey = useRef<string | undefined>(undefined);
   const placeOrder = useMutation({ mutationFn: checkoutService.placeOrder });
+  const processPayment = useMutation({ mutationFn: paymentService.processPayment });
 
   useEffect(() => {
     document.title = 'Checkout — ShopSphere';
@@ -51,7 +55,7 @@ export default function Checkout() {
       });
       setOrder(response.data);
       await queryClient.invalidateQueries({ queryKey: cartQueryKey });
-      toast.success('Order placed successfully');
+      toast.success('Order created — payment is still required');
     } catch (requestError) {
       setCheckoutError(requestError instanceof Error ? requestError.message : 'We could not place your order. Please review your cart and try again.');
     }
@@ -61,11 +65,38 @@ export default function Checkout() {
     return <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8"><div className="h-10 w-36 animate-pulse rounded bg-muted" /><div className="mt-8 grid gap-8 lg:grid-cols-2"><div className="h-96 animate-pulse rounded-lg bg-muted" /><div className="h-72 animate-pulse rounded-lg bg-muted" /></div></div>;
   }
   if (isCartError) return <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8"><ErrorDisplay message={cartError.message || 'We could not load your cart.'} onRetry={() => refetchCart()} /></div>;
-  if (!cart || cart.items.length === 0) {
-    return <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8"><EmptyState icon={ShoppingBag} title="Your cart is empty" description="Add an item before you begin checkout." actionLabel="Browse products" onAction={() => navigate('/products')} className="min-h-[55vh]" /></div>;
+
+  async function submitPayment(outcome: SimulatedPaymentOutcome) {
+    if (!order) return;
+
+    setPaymentError(undefined);
+    paymentIdempotencyKey.current ??= crypto.randomUUID();
+
+    try {
+      const response = await processPayment.mutateAsync({
+        orderId: order._id,
+        outcome,
+        idempotencyKey: paymentIdempotencyKey.current,
+      });
+      const paymentResult = response.data;
+      setOrder((currentOrder) => currentOrder ? {
+        ...currentOrder,
+        status: paymentResult.order.status,
+        paymentStatus: paymentResult.order.paymentStatus,
+      } : currentOrder);
+
+      if (paymentResult.order.paymentStatus === 'paid') {
+        toast.success('Simulated payment successful');
+      } else {
+        paymentIdempotencyKey.current = undefined;
+        setPaymentError('Payment failed. Your order remains unpaid, and you can retry safely.');
+      }
+    } catch (requestError) {
+      setPaymentError(requestError instanceof Error ? requestError.message : 'Payment could not be processed. Please try again.');
+    }
   }
 
-  if (order) {
+  if (order?.paymentStatus === 'paid') {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 lg:px-8">
         <section className="rounded-lg border border-border bg-card p-6 text-center shadow-sm sm:p-10" aria-labelledby="confirmation-title">
@@ -81,6 +112,43 @@ export default function Checkout() {
     );
   }
 
+  if (order) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 lg:px-8">
+        <section className="rounded-lg border border-border bg-card p-6 shadow-sm sm:p-10" aria-labelledby="payment-title">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Order created</p>
+          <h1 id="payment-title" className="mt-2 font-heading text-3xl font-semibold text-foreground sm:text-4xl">Complete your payment</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Order <span className="font-medium text-foreground">{order.orderNumber}</span> is reserved but unpaid. Choose a clearly simulated outcome below for this assessment flow.</p>
+          <div className="mt-6 flex items-center justify-between border-y border-border py-4">
+            <span className="text-sm text-muted-foreground">Order total</span>
+            <span className="text-xl font-semibold text-foreground">{formatPrice(order.total)}</span>
+          </div>
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Payment status</span>
+            <span className="font-medium capitalize text-foreground">Payment {order.paymentStatus}</span>
+          </div>
+          <p className="mt-6 text-sm font-medium text-foreground">Simulated payment</p>
+          <p className="mt-1 text-xs text-muted-foreground">No real payment details or money are collected.</p>
+          {paymentError && <p role="alert" className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">{paymentError}</p>}
+          {order.paymentStatus === 'failed' && !paymentError && <p role="status" className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">Payment failed. Retry when you are ready.</p>}
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Button type="button" disabled={processPayment.isPending} onClick={() => submitPayment('success')} className="bg-accent text-on-accent hover:bg-accent/90">
+              {processPayment.isPending ? 'Processing…' : 'Simulate payment success'}
+            </Button>
+            <Button type="button" variant="outline" disabled={processPayment.isPending} onClick={() => submitPayment('failure')}>
+              {order.paymentStatus === 'failed' ? 'Retry payment' : 'Simulate payment failure'}
+            </Button>
+          </div>
+          <p className="mt-5 text-xs text-muted-foreground">A failed attempt does not mark the order paid or create another order. Retrying uses the same order with a new payment attempt.</p>
+        </section>
+      </div>
+    );
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8"><EmptyState icon={ShoppingBag} title="Your cart is empty" description="Add an item before you begin checkout." actionLabel="Browse products" onAction={() => navigate('/products')} className="min-h-[55vh]" /></div>;
+  }
+
   const hasUnavailableItem = cart.items.some((item) => !item.product?.isActive || !item.product.stock || item.quantity > item.product.stock);
 
   return (
@@ -88,7 +156,7 @@ export default function Checkout() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Secure checkout</p>
         <h1 className="mt-2 font-heading text-4xl font-semibold text-foreground sm:text-5xl">Delivery & review</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Your payment is not collected in this phase. Prices and availability are verified when the order is placed.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Review your delivery details and complete the simulated payment after your order is created.</p>
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start">

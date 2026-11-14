@@ -47,7 +47,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <SuspensePage><Home /></SuspensePage> },
       { path: 'products', element: <SuspensePage><Products /></SuspensePage> },
-      { path: 'category/new-arrivals', element: <Navigate to="/products?sort=createdAt:desc" replace /> },
+      { path: 'category/new-arrivals', element: <Navigate to="/products?newArrivals=true&sort=createdAt:desc" replace /> },
       { path: 'category/featured', element: <Navigate to="/products?featured=true" replace /> },
       { path: 'category/sale', element: <Navigate to="/products?sale=true" replace /> },
       { path: 'products/:slug', element: <SuspensePage><ProductDetail /></SuspensePage> },

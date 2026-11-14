@@ -247,6 +247,15 @@ describe('Products page', () => {
     );
   });
 
+  it('passes the New Arrivals collection filter from the URL to the catalog query', () => {
+    setupSuccess();
+    renderProducts('/products?newArrivals=true');
+
+    expect(mockUseProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ newArrivals: true })
+    );
+  });
+
   it('applies a completed price range explicitly', async () => {
     setupSuccess();
     renderProducts();

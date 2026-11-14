@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export default function AdminLayout() {
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-muted/30">
+    <div className="admin-workspace flex min-h-screen overflow-x-hidden bg-muted/30">
       <aside className="hidden w-64 border-r border-border bg-card lg:block">
         <div className="p-6">
           <h2 className="font-heading text-xl font-semibold">ShopSphere</h2>

@@ -5,7 +5,7 @@ const footerSections = [
     title: 'Shop',
     links: [
       { to: '/products', label: 'All Products' },
-      { to: '/products?sort=createdAt:desc', label: 'New Arrivals' },
+      { to: '/products?newArrivals=true&sort=createdAt:desc', label: 'New Arrivals' },
       { to: '/products?featured=true', label: 'Featured' },
       { to: '/products?sale=true', label: 'Sale' },
     ],

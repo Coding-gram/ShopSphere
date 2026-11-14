@@ -45,6 +45,7 @@ export default function Products() {
   const maxPrice = searchParams.get('maxPrice') ?? '';
   const featured = searchParams.get('featured') === 'true';
   const sale = searchParams.get('sale') === 'true';
+  const newArrivals = searchParams.get('newArrivals') === 'true';
   const parsedMinPrice = parsePriceFilter(minPrice);
   const parsedMaxPrice = parsePriceFilter(maxPrice);
 
@@ -113,6 +114,7 @@ export default function Products() {
     ...(parsedMaxPrice !== undefined && { maxPrice: parsedMaxPrice }),
     ...(featured && { featured: true }),
     ...(sale && { sale: true }),
+    ...(newArrivals && { newArrivals: true }),
   };
 
   // ── Fetch data ────────────────────────────────────────────────────────────
@@ -230,74 +232,74 @@ export default function Products() {
         </h1>
       </div>
 
-      {/* Search + mobile filter toggle */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="relative flex-1 sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input
-            type="search"
-            placeholder="Search products…"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10"
-            aria-label="Search products"
-          />
-          {searchInput && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchInput('');
-                updateParams({ search: undefined });
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* Mobile filter trigger */}
-        <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-          <SheetTrigger asChild>
-            <button
-              type="button"
-              className="relative inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-muted lg:hidden"
-              aria-label="Open filters"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="hidden sm:inline">Filters</span>
-              {activeFilterCount > 0 && (
-                <Badge variant="default" className="h-5 w-5 justify-center rounded-full p-0 text-[10px]">
-                  {activeFilterCount}
-                </Badge>
-              )}
-            </button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80 overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle className="font-heading text-xl">Filters</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
-              <ProductFilters {...filterProps} />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      {/* Main content: sidebar + grid */}
-      <div className="flex gap-8">
+      {/* Main content: filters, search, and grid */}
+      <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
         {/* Desktop sidebar */}
-        <aside className="hidden w-60 shrink-0 lg:block" aria-label="Product filters">
+        <aside className="hidden lg:col-start-1 lg:row-span-2 lg:block" aria-label="Product filters">
           <div className="sticky top-28">
             <ProductFilters {...filterProps} />
           </div>
         </aside>
 
+        {/* Search + mobile filter toggle */}
+        <div className="flex min-w-0 items-center gap-3 lg:col-start-2 lg:row-start-1">
+          <div className="relative min-w-0 flex-1 sm:max-w-xs lg:max-w-md xl:max-w-lg">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Input
+              type="search"
+              placeholder="Search products…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-10"
+              aria-label="Search products"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  updateParams({ search: undefined });
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile filter trigger */}
+          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className="relative inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors duration-200 hover:border-accent/50 hover:bg-muted lg:hidden"
+                aria-label="Open filters"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Filters</span>
+                {activeFilterCount > 0 && (
+                  <Badge variant="default" className="h-5 w-5 justify-center rounded-full p-0 text-[10px]">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80 overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="font-heading text-xl">Filters</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <ProductFilters {...filterProps} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
         {/* Product grid area */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 lg:col-start-2 lg:row-start-2">
           {/* Results info + active filters */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               {pagination && !productsLoading && (
                 <p className="text-sm text-muted-foreground">

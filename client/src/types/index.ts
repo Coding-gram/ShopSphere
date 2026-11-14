@@ -27,6 +27,7 @@ export interface Product {
   tags: string[];
   isActive: boolean;
   isFeatured: boolean;
+  isNewArrival?: boolean;
   avgRating: number;
   reviewCount: number;
   createdAt: string;
@@ -106,6 +107,7 @@ export interface OrderItem {
 
 export type OrderStatus = 'placed' | 'paid' | 'packed' | 'shipped' | 'delivered' | 'cancelled';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type SimulatedPaymentOutcome = 'success' | 'failure';
 
 export interface Order {
   _id: string;
@@ -122,6 +124,19 @@ export interface Order {
   statusHistory: { status: OrderStatus; timestamp: string; note?: string }[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PaymentResult {
+  replayed: boolean;
+  order: Pick<Order, '_id' | 'orderNumber' | 'status' | 'paymentStatus'>;
+  paymentAttempt: {
+    _id: string;
+    status: 'pending' | 'succeeded' | 'failed';
+    amount: number;
+    currency: 'INR';
+    failureCode?: string;
+    createdAt: string;
+  };
 }
 
 export interface AdminOrderCustomer {

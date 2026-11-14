@@ -16,8 +16,8 @@ import { useCart } from '@/hooks/useCart';
 
 const navLinks = [
   { to: '/', label: 'Home' },
-  { to: '/products', label: 'Shop' },
-  { to: '/products?sort=createdAt:desc', label: 'New Arrivals' },
+  { to: '/products?sort=name:asc', label: 'Shop' },
+  { to: '/products?newArrivals=true&sort=createdAt:desc', label: 'New Arrivals' },
   { to: '/products?featured=true', label: 'Featured' },
 ];
 

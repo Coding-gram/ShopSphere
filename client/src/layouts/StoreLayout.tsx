@@ -5,9 +5,9 @@ import Footer from '@/components/layout/Footer';
 
 export default function StoreLayout() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <main className="flex-1">
+      <main className="min-w-0 flex-1">
         <Outlet />
       </main>
       <Footer />
