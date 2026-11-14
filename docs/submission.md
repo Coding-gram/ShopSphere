@@ -38,7 +38,7 @@
 
 - Sign in as the seeded customer.
 - Create/select an address, place an order, and explain server-calculated totals and stock validation.
-- Open the order detail, run simulated payment success or failure, then show cancellation for an eligible order.
+- Complete simulated payment from the checkout screen; optionally demonstrate failure and retry on the same order, then show the paid status in order history and detail.
 
 ### 2:30–3:30 — Admin operations
 

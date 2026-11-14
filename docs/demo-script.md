@@ -24,9 +24,9 @@ This walkthrough is designed for a 3–5 minute assessment demonstration.
 - Open the cart and continue to checkout.
 - Select or create a delivery address.
 - Explain that checkout recalculates prices and validates stock on the server.
-- Place the order with an idempotency key.
-- Use the simulated payment flow with `success` to transition the order to `paid`.
-- Optionally repeat with `failure` to show a failed payment attempt that leaves the order eligible for retry.
+- Place the order with an idempotency key; explain that this reserves stock and creates an unpaid order.
+- Use the clearly labeled simulated payment flow with `success` to transition the order to `paid`.
+- Optionally repeat with `failure` to show a failed payment attempt, then retry `success` on the same order without creating a duplicate order.
 - Open order history and the order detail page.
 - If the order is still eligible, demonstrate cancellation and explain that stock is restored once and the order history is preserved.
 

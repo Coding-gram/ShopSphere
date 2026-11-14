@@ -360,8 +360,7 @@ paths:
               properties:
                 outcome: { type: string, enum: [success, failure] }
       responses:
-        '200': { description: Payment result or replay, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
-        '201': { description: Payment attempt recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '200': { description: Payment result or idempotent replay, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
         '400': { $ref: '#/components/responses/ValidationError' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }

@@ -81,7 +81,7 @@ placed → paid → packed → shipped → delivered
 
 Cancellation is allowed only from `placed` or `paid`. It is transaction-backed, restores each snapshotted product quantity once, records a customer audit event, and stores its idempotency key/fingerprint on the order. Cancellation does not delete the order or change its payment snapshot.
 
-Payment processing currently uses `simulatedPaymentGateway`. The customer submits `outcome: "success"` or `"failure"` with an idempotency key. A success transitions `placed → paid`; a failure leaves the order `placed` with `paymentStatus: failed`. Each attempt is immutable and uniquely indexed by `(order, idempotencyKey)`, and payment audit events are recorded. No external gateway, webhook, refund, or real-money charge is active.
+Payment processing currently uses `simulatedPaymentGateway`. The customer submits `outcome: "success"` or `"failure"` with an idempotency key from the checkout payment screen. A success transitions `placed → paid`; a failure leaves the order `placed` with `paymentStatus: failed`, and the same order can be retried with a new key. Each attempt is immutable and uniquely indexed by `(order, idempotencyKey)`, and payment audit events are recorded. On standalone MongoDB, the payment service uses a guarded non-transactional fallback; replica-set deployment remains the safer configuration. No external gateway, webhook, refund, or real-money charge is active.
 
 ## Admin workflows
 

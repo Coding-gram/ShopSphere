@@ -45,7 +45,7 @@ Browser → React Router → pages/components → TanStack Query → Express API
 - Node.js 18 or newer.
 - npm.
 - MongoDB 6+ locally or a MongoDB Atlas deployment.
-- A MongoDB replica set or mongos is recommended for transactional checkout, payment, cancellation, inventory, and admin mutations. Development checkout has a guarded standalone-MongoDB fallback with compensating stock restoration; replica-set deployment is still the safer configuration.
+- A MongoDB replica set or mongos is recommended for transactional checkout, payment, cancellation, inventory, and admin mutations. Development checkout and simulated payment have guarded standalone-MongoDB fallbacks; replica-set deployment is still the safer configuration.
 
 ## Local setup
 
@@ -177,7 +177,7 @@ The server test setup uses `mongodb-memory-server` with a one-node replica set s
 - Payments are deterministic and local (`success` or `failure`) through `simulatedPaymentGateway`; no real charge is made.
 - Razorpay variables are present as reserved configuration, but there is no active Razorpay request, webhook, signature verification, or refund workflow.
 - Cloudinary variables are present as reserved configuration, but current catalog images use stored URLs.
-- MongoDB transactions require a replica set or mongos. The checkout service has a limited standalone fallback, but production should use a replica set and the other transaction-backed mutations do not provide that fallback.
+- MongoDB transactions require a replica set or mongos. Checkout and simulated payment have limited standalone fallbacks for local development, but production should use a replica set because other transaction-backed mutations do not provide that fallback.
 - There is no Dockerfile, compose file, CI workflow, hosting manifest, or production process manager configuration in this repository.
 - The seed script is a development/demo reset for selected collections, not a production migration.
 - The API uses HTTP-only cookies and a configured CORS origin; production deployment must use HTTPS and a strong secret.
