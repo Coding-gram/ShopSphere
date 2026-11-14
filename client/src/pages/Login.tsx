@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import type { User } from '@/types';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
@@ -18,8 +19,21 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+function isSafeInternalPath(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/\\');
+}
+
+function postLoginDestination(user: Pick<User, 'role'>, requestedPath: unknown): string {
+  const from = isSafeInternalPath(requestedPath) ? requestedPath : undefined;
+  const isAdminPath = from === '/admin' || from?.startsWith('/admin/');
+
+  if (user.role === 'admin') return isAdminPath && from ? from : '/admin';
+  if (!from || isAdminPath || from === '/login') return '/';
+  return from;
+}
+
 export default function Login() {
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, user, isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +43,7 @@ export default function Login() {
     return () => { document.title = 'ShopSphere'; };
   }, []);
 
-  const from = (location.state as { from?: string })?.from || '/';
+  const from = (location.state as { from?: string })?.from;
 
   const {
     register,
@@ -40,13 +54,13 @@ export default function Login() {
   });
 
   if (authLoading) return null;
-  if (isAuthenticated) return <Navigate to={from} replace />;
+  if (isAuthenticated) return <Navigate to={user ? postLoginDestination(user, from) : '/'} replace />;
 
   async function onSubmit(data: LoginFormData) {
     try {
-      await login(data.email, data.password);
+      const user = await login(data.email, data.password);
       toast.success('Welcome back!');
-      navigate(from, { replace: true });
+      navigate(postLoginDestination(user, from), { replace: true });
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'message' in err

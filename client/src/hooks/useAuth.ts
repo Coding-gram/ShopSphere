@@ -6,7 +6,7 @@ export interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: { name?: string; phone?: string }) => Promise<void>;
@@ -17,7 +17,7 @@ export const AuthContext = createContext<AuthContextValue>({
   isLoading: true,
   isAuthenticated: false,
   isAdmin: false,
-  login: async () => {},
+  login: async () => { throw new Error('AuthContext is not available'); },
   register: async () => {},
   logout: async () => {},
   updateProfile: async () => {},

@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContext, type AuthContextValue } from '@/hooks/useAuth';
 import Login from './Login';
+import type { User } from '@/types';
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -47,6 +48,13 @@ function renderWithAuth(
 }
 
 describe('Login page', () => {
+  const customer: User = { _id: 'customer-1', name: 'Customer', email: 'customer@example.com', role: 'customer', isActive: true, createdAt: '', updatedAt: '' };
+  const admin: User = { _id: 'admin-1', name: 'Admin', email: 'admin@shopsphere.com', role: 'admin', isActive: true, createdAt: '', updatedAt: '' };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders login form with email and password fields', () => {
     renderWithAuth(<Login />);
     expect(screen.getByText('Welcome Back')).toBeInTheDocument();
@@ -78,8 +86,8 @@ describe('Login page', () => {
     });
   });
 
-  it('calls login on valid submission', async () => {
-    const mockLogin = vi.fn().mockResolvedValue(undefined);
+  it('returns customers to the storefront after valid submission', async () => {
+    const mockLogin = vi.fn().mockResolvedValue(customer);
     const user = userEvent.setup();
     renderWithAuth(<Login />, { login: mockLogin });
 
@@ -89,6 +97,21 @@ describe('Login page', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+  });
+
+  it('sends an administrator to the admin workspace after valid submission', async () => {
+    const mockLogin = vi.fn().mockResolvedValue(admin);
+    const user = userEvent.setup();
+    renderWithAuth(<Login />, { login: mockLogin });
+
+    await user.type(screen.getByLabelText('Email'), 'admin@shopsphere.com');
+    await user.type(screen.getByLabelText('Password'), 'Admin@123456');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/admin', { replace: true });
     });
   });
 
