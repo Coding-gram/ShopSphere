@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as categoriesController from './categories.controller.js';
 import { validate } from '../../middleware/validate.js';
-import { protect, requireAdmin } from '../../middleware/auth.js';
+import { protect, requireActiveAdmin, requireAdmin } from '../../middleware/auth.js';
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -14,9 +14,9 @@ router.get('/', categoriesController.getCategories);
 router.get('/:slug', categoriesController.getCategory);
 
 // Admin
-router.post('/', protect, requireAdmin, validate(createCategorySchema), categoriesController.createCategory);
-router.put('/:id', protect, requireAdmin, validate(updateCategorySchema), categoriesController.updateCategory);
-router.delete('/:id', protect, requireAdmin, categoriesController.deleteCategory);
+router.post('/', protect, requireAdmin, requireActiveAdmin, validate(createCategorySchema), categoriesController.createCategory);
+router.put('/:id', protect, requireAdmin, requireActiveAdmin, validate(updateCategorySchema), categoriesController.updateCategory);
+router.delete('/:id', protect, requireAdmin, requireActiveAdmin, categoriesController.deleteCategory);
 
 export default router;
 

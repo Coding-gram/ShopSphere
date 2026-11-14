@@ -10,6 +10,11 @@ export const getCategories = asyncHandler(
   },
 );
 
+export const getAdminCategories = asyncHandler(async (_req: Request, res: Response) => {
+  const categories = await categoryService.listCategories(false);
+  sendResponse(res, 200, 'Admin categories retrieved', categories);
+});
+
 export const getCategory = asyncHandler(async (req: Request, res: Response) => {
   const category = await categoryService.getCategoryBySlug(req.params.slug as string);
   sendResponse(res, 200, 'Category retrieved', category);

@@ -39,4 +39,14 @@ describe('Phase 6 admin catalog', () => {
     await User.updateOne({ _id: user._id }, { $set: { isActive: false } });
     await request(app).post('/api/v1/admin/products').set('Cookie', cookies).send({}).expect(403);
   });
+
+  it('manages categories while preserving parent and deletion safeguards', async () => {
+    const { cookies } = await adminSession();
+    const parent = await request(app).post('/api/v1/admin/categories').set('Cookie', cookies).send({ name: 'Parent category' }).expect(201);
+    const child = await request(app).post('/api/v1/admin/categories').set('Cookie', cookies).send({ name: 'Child category', parent: parent.body.data._id }).expect(201);
+    const list = await request(app).get('/api/v1/admin/categories').set('Cookie', cookies).expect(200);
+    expect(list.body.data).toEqual(expect.arrayContaining([expect.objectContaining({ _id: child.body.data._id, parent: parent.body.data._id })]));
+    await request(app).delete(`/api/v1/admin/categories/${parent.body.data._id}`).set('Cookie', cookies).expect(400);
+    await request(app).put(`/api/v1/admin/categories/${child.body.data._id}`).set('Cookie', cookies).send({ name: 'Renamed child' }).expect(200);
+  });
 });

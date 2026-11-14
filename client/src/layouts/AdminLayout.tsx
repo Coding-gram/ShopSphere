@@ -1,4 +1,4 @@
-import { ClipboardList, ExternalLink, LayoutDashboard, Package } from 'lucide-react';
+import { ClipboardList, ExternalLink, FolderTree, LayoutDashboard, Package } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ export default function AdminLayout() {
         <nav className="px-3" aria-label="Admin navigation">
           <NavLink to="/admin" end className={({ isActive }) => cn('flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors hover:bg-muted', isActive ? 'bg-muted text-accent' : 'text-foreground')}><LayoutDashboard className="h-4 w-4" aria-hidden="true" />Dashboard</NavLink>
           <NavLink to="/admin/products" className={({ isActive }) => cn('flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors hover:bg-muted', isActive ? 'bg-muted text-accent' : 'text-foreground')}><Package className="h-4 w-4" aria-hidden="true" />Products</NavLink>
+          <NavLink to="/admin/categories" className={({ isActive }) => cn('flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors hover:bg-muted', isActive ? 'bg-muted text-accent' : 'text-foreground')}><FolderTree className="h-4 w-4" aria-hidden="true" />Categories</NavLink>
           <NavLink to="/admin/orders" className={({ isActive }) => cn('flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors hover:bg-muted', isActive ? 'bg-muted text-accent' : 'text-foreground')}><ClipboardList className="h-4 w-4" aria-hidden="true" />Orders</NavLink>
         </nav>
       </aside>
