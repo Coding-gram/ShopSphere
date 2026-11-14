@@ -24,7 +24,7 @@ export const createProductSchema = z.object({
     tags: z.array(z.string().trim()).optional(),
     isActive: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
-  }),
+  }).strict(),
 });
 
 export const updateProductSchema = z.object({

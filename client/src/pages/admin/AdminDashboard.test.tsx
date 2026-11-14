@@ -21,6 +21,7 @@ describe('AdminDashboard', () => {
     render(<MemoryRouter><AdminDashboard /></MemoryRouter>);
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('Revenue')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Order status' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /view order ord-1001/i })).toHaveAttribute('href', '/admin/orders/order-1');
   });
 

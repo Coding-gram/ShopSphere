@@ -7,7 +7,7 @@ export const createCategorySchema = z.object({
     image: z.string().url('Please enter a valid URL').optional(),
     parent: z.string().optional(),
     isActive: z.boolean().optional(),
-  }),
+  }).strict(),
 });
 
 export const updateCategorySchema = z.object({
@@ -18,6 +18,6 @@ export const updateCategorySchema = z.object({
     image: z.string().url().nullable().optional(),
     parent: z.string().nullable().optional(),
     isActive: z.boolean().optional(),
-  }),
+  }).strict(),
 });
 

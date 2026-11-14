@@ -46,6 +46,7 @@ describe('Phase 6 admin catalog', () => {
     const child = await request(app).post('/api/v1/admin/categories').set('Cookie', cookies).send({ name: 'Child category', parent: parent.body.data._id }).expect(201);
     const list = await request(app).get('/api/v1/admin/categories').set('Cookie', cookies).expect(200);
     expect(list.body.data).toEqual(expect.arrayContaining([expect.objectContaining({ _id: child.body.data._id, parent: parent.body.data._id })]));
+    await request(app).put(`/api/v1/admin/categories/${parent.body.data._id}`).set('Cookie', cookies).send({ parent: child.body.data._id }).expect(400);
     await request(app).delete(`/api/v1/admin/categories/${parent.body.data._id}`).set('Cookie', cookies).expect(400);
     await request(app).put(`/api/v1/admin/categories/${child.body.data._id}`).set('Cookie', cookies).send({ name: 'Renamed child' }).expect(200);
   });
