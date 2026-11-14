@@ -66,6 +66,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             src={imageUrl}
             alt={product.name}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={() => setFailedImageUrl(imageUrl)}
           />

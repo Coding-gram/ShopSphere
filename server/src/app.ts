@@ -26,7 +26,25 @@ import adminDashboardRoutes from './modules/admin/dashboard.routes.js';
 const app = express();
 
 // ── Security & parsing ──────────────────────────────────────────────────────
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https://images.unsplash.com'],
+        fontSrc: ["'self'", 'https:', 'data:'],
+        styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        scriptSrcAttr: ["'none'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'self'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+  }),
+);
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));

@@ -24,7 +24,7 @@ export function OrderCard({ order }: { order: Order }) {
       <div className="mt-6 flex items-center gap-4 border-y border-border py-4">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
           {firstItem?.image ? (
-            <img src={firstItem.image} alt={firstItem.name} className="h-full w-full object-cover" />
+            <img src={firstItem.image} alt={firstItem.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
           ) : (
             <Package className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
           )}

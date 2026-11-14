@@ -27,7 +27,7 @@ export function CartItem({
     <li className="grid gap-4 py-5 sm:grid-cols-[6rem_1fr_auto] sm:items-center sm:gap-5">
       <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-md border border-border bg-muted sm:h-24 sm:w-24">
         {product?.images[0] ? (
-          <img src={product.images[0]} alt="" className="h-full w-full object-cover" />
+          <img src={product.images[0]} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
         ) : (
           <PackageX className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
         )}

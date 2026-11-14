@@ -62,6 +62,7 @@ export function ProductImages({ images, productName }: ProductImagesProps) {
             src={images[selectedIndex]}
             alt={`${productName} — image ${selectedIndex + 1} of ${images.length}`}
             className="h-full w-full object-cover transition-opacity duration-300"
+            referrerPolicy="no-referrer"
             onError={() => handleImageError(selectedIndex)}
           />
         ) : (
@@ -142,6 +143,7 @@ export function ProductImages({ images, productName }: ProductImagesProps) {
                   src={img}
                   alt=""
                   className="h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
                   onError={() => handleImageError(idx)}
                 />
               )}
