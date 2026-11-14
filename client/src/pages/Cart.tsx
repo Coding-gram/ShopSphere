@@ -82,7 +82,9 @@ export default function Cart() {
           </ul>
         </section>
 
-        <aside className="rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Order summary">
+        <aside className="overflow-hidden rounded-lg border border-border bg-card shadow-sm" aria-label="Order summary">
+          <div className="h-1 bg-accent" />
+          <div className="p-5 sm:p-6">
           <h2 className="font-heading text-2xl font-semibold text-foreground">Order summary</h2>
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-medium text-foreground">{formatPrice(cart.subtotal)}</dd></div>
@@ -99,6 +101,7 @@ export default function Cart() {
             </Button>
           )}
           <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground"><LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" /> Prices and availability are verified securely at checkout.</p>
+          </div>
         </aside>
       </div>
     </div>

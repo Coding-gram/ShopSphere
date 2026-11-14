@@ -60,7 +60,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       aria-label={`View ${product.name} — ${formatPrice(product.price)}`}
     >
       {/* Image container */}
-      <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-muted">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg">
         {hasImage ? (
           <img
             src={imageUrl}

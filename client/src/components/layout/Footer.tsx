@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 const footerSections = [
   {
@@ -31,9 +33,55 @@ const footerSections = [
 ];
 
 export default function Footer() {
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail('');
+    }
+  }
+
   return (
     <footer className="border-t border-border bg-card" role="contentinfo">
       <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        {/* Newsletter */}
+        <div className="border-b border-border py-12 sm:py-16">
+          <div className="mx-auto max-w-xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Stay in the loop</p>
+            <h2 className="mt-3 font-heading text-2xl font-semibold text-foreground sm:text-3xl">
+              Join the ShopSphere Edit
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              New arrivals, exclusive offers, and style notes — delivered to your inbox.
+            </p>
+            {subscribed ? (
+              <p className="mt-6 text-sm font-medium text-success">Thank you for subscribing!</p>
+            ) : (
+              <form onSubmit={handleSubscribe} className="mx-auto mt-6 flex max-w-sm gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  required
+                  className="flex h-11 w-full rounded-md border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                  aria-label="Email address for newsletter"
+                />
+                <button
+                  type="submit"
+                  className="inline-flex h-11 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md bg-accent px-5 text-sm font-semibold text-on-accent transition-colors duration-200 hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  Subscribe
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+
         {/* Top section */}
         <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:py-16">
           {/* Brand */}
@@ -87,4 +135,3 @@ export default function Footer() {
     </footer>
   );
 }
-

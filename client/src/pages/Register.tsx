@@ -70,7 +70,20 @@ export default function Register() {
   }
 
   return (
-    <div className="flex min-h-[70vh] items-center justify-center px-4 py-16">
+    <div className="flex min-h-[80vh] items-stretch">
+      {/* Branded panel — hidden on mobile */}
+      <div className="relative hidden w-2/5 items-center justify-center overflow-hidden bg-primary lg:flex">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} aria-hidden="true" />
+        <div className="relative z-10 max-w-xs text-center">
+          <h2 className="font-heading text-4xl font-semibold text-on-primary">ShopSphere</h2>
+          <p className="mt-4 text-sm leading-relaxed text-on-primary/60">Join a community that values quality and timeless style.</p>
+        </div>
+        <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
+      </div>
+
+      {/* Form panel */}
+      <div className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -208,6 +221,7 @@ export default function Register() {
             Sign in
           </Link>
         </p>
+      </div>
       </div>
     </div>
   );

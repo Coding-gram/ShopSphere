@@ -32,7 +32,7 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
     <Link
       to={`/products?category=${category.slug}`}
       className={cn(
-        'group relative block cursor-pointer overflow-hidden rounded-lg',
+        'group relative block cursor-pointer overflow-hidden rounded-lg shadow-sm transition-shadow duration-300 hover:shadow-lg',
         className
       )}
       aria-label={`Browse ${category.name}`}
