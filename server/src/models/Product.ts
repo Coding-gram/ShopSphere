@@ -27,6 +27,7 @@ export interface IProduct extends Document {
   tags: string[];
   isActive: boolean;
   isFeatured: boolean;
+  isNewArrival: boolean;
   avgRating: number;
   reviewCount: number;
   createdAt: Date;
@@ -80,6 +81,7 @@ const productSchema = new Schema<IProduct>(
     tags: { type: [String], default: [] },
     isActive: { type: Boolean, default: true },
     isFeatured: { type: Boolean, default: false },
+    isNewArrival: { type: Boolean, default: false },
     avgRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0, min: 0 },
   },

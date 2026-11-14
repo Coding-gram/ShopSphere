@@ -15,6 +15,12 @@ function isDuplicateKeyError(error: unknown): error is { code: number } {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 11000;
 }
 
+function isTransactionUnsupportedError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return ('code' in error && (error as Error & { code?: number }).code === 20)
+    || error.message.includes('Transaction numbers are only allowed');
+}
+
 function toPaymentResult(order: IOrder, attempt: IPaymentAttempt, replayed: boolean) {
   return {
     replayed,
@@ -45,8 +51,11 @@ async function findPaymentReplay(
   order: IOrder,
   idempotencyKey: string,
   requestFingerprint: string,
+  session?: mongoose.ClientSession,
 ) {
-  const attempt = await PaymentAttempt.findOne({ order: order._id, idempotencyKey });
+  const attemptQuery = PaymentAttempt.findOne({ order: order._id, idempotencyKey });
+  if (session) attemptQuery.session(session);
+  const attempt = await attemptQuery;
   if (!attempt) return undefined;
 
   if (attempt.requestFingerprint !== requestFingerprint) {
@@ -54,6 +63,87 @@ async function findPaymentReplay(
   }
 
   return toPaymentResult(order, attempt, true);
+}
+
+async function executePayment(
+  userId: string,
+  orderId: string,
+  idempotencyKey: string,
+  requestFingerprint: string,
+  outcome: SimulatedPaymentOutcome,
+  session?: mongoose.ClientSession,
+) {
+  const orderQuery = Order.findOne({ _id: orderId, user: userId });
+  if (session) orderQuery.session(session);
+  const order = await orderQuery;
+  if (!order) throw new ApiError(404, 'Order not found');
+
+  const replayedResult = await findPaymentReplay(order, idempotencyKey, requestFingerprint, session);
+  if (replayedResult) return replayedResult;
+
+  if (order.status !== 'placed') {
+    throw new ApiError(409, 'Order is not eligible for payment');
+  }
+
+  const gatewayResult = await simulatedPaymentGateway.charge({
+    amount: order.total,
+    currency: 'INR',
+    outcome,
+  });
+  const succeeded = gatewayResult.status === 'succeeded';
+  const resultingOrderStatus = succeeded ? 'paid' : 'placed';
+  const resultingPaymentStatus = succeeded ? 'paid' : 'failed';
+  const [attempt] = await PaymentAttempt.create([{
+    order: order._id,
+    idempotencyKey,
+    requestFingerprint,
+    amount: order.total,
+    currency: 'INR',
+    provider: 'simulated',
+    status: gatewayResult.status,
+    ...(gatewayResult.status === 'failed' ? { failureCode: gatewayResult.failureCode } : {}),
+    resultingOrderStatus,
+    resultingPaymentStatus,
+  }], session ? { session } : undefined);
+
+  await OrderAuditEvent.create([{
+    order: order._id,
+    actorType: 'customer',
+    actorId: userId,
+    eventType: 'payment_attempted',
+    fromStatus: order.status,
+    toStatus: order.status,
+    note: 'Simulated payment attempt recorded.',
+  }], session ? { session } : undefined);
+
+  if (succeeded) assertOrderTransition(order.status, 'paid');
+  const updatedOrder = await Order.findOneAndUpdate(
+    { _id: order._id, user: userId, status: 'placed' },
+    {
+      $set: { status: resultingOrderStatus, paymentStatus: resultingPaymentStatus },
+      $push: {
+        statusHistory: {
+          status: resultingOrderStatus,
+          timestamp: new Date(),
+          note: succeeded ? 'Payment succeeded.' : 'Payment failed.',
+        },
+      },
+    },
+    { returnDocument: 'after', ...(session ? { session } : {}) },
+  );
+  if (!updatedOrder) throw new ApiError(409, 'Order is no longer eligible for payment');
+
+  await OrderAuditEvent.create([{
+    order: order._id,
+    actorType: 'customer',
+    actorId: userId,
+    eventType: succeeded ? 'payment_succeeded' : 'payment_failed',
+    fromStatus: 'placed',
+    toStatus: resultingOrderStatus,
+    note: succeeded ? 'Simulated payment succeeded.' : 'Simulated payment was declined.',
+  }], session ? { session } : undefined);
+
+  return toPaymentResult(updatedOrder, attempt, false);
 }
 
 export async function processPayment(
@@ -72,80 +162,14 @@ export async function processPayment(
   try {
     let result: ReturnType<typeof toPaymentResult> | undefined;
 
-    await session.withTransaction(async () => {
-      const order = await Order.findOne({ _id: orderId, user: userId }).session(session);
-      if (!order) throw new ApiError(404, 'Order not found');
-
-      const replayedResult = await findPaymentReplay(order, idempotencyKey, requestFingerprint);
-      if (replayedResult) {
-        result = replayedResult;
-        return;
-      }
-
-      if (order.status !== 'placed') {
-        throw new ApiError(409, 'Order is not eligible for payment');
-      }
-
-      const gatewayResult = await simulatedPaymentGateway.charge({
-        amount: order.total,
-        currency: 'INR',
-        outcome,
+    try {
+      await session.withTransaction(async () => {
+        result = await executePayment(userId, orderId, idempotencyKey, requestFingerprint, outcome, session);
       });
-      const succeeded = gatewayResult.status === 'succeeded';
-      const resultingOrderStatus = succeeded ? 'paid' : 'placed';
-      const resultingPaymentStatus = succeeded ? 'paid' : 'failed';
-      const [attempt] = await PaymentAttempt.create([{
-        order: order._id,
-        idempotencyKey,
-        requestFingerprint,
-        amount: order.total,
-        currency: 'INR',
-        provider: 'simulated',
-        status: gatewayResult.status,
-        ...(gatewayResult.status === 'failed' ? { failureCode: gatewayResult.failureCode } : {}),
-        resultingOrderStatus,
-        resultingPaymentStatus,
-      }], { session });
-
-      await OrderAuditEvent.create([{
-        order: order._id,
-        actorType: 'customer',
-        actorId: userId,
-        eventType: 'payment_attempted',
-        fromStatus: order.status,
-        toStatus: order.status,
-        note: 'Simulated payment attempt recorded.',
-      }], { session });
-
-      if (succeeded) assertOrderTransition(order.status, 'paid');
-      const updatedOrder = await Order.findOneAndUpdate(
-        { _id: order._id, user: userId, status: 'placed' },
-        {
-          $set: { status: resultingOrderStatus, paymentStatus: resultingPaymentStatus },
-          $push: {
-            statusHistory: {
-              status: resultingOrderStatus,
-              timestamp: new Date(),
-              note: succeeded ? 'Payment succeeded.' : 'Payment failed.',
-            },
-          },
-        },
-        { returnDocument: 'after', session },
-      );
-      if (!updatedOrder) throw new ApiError(409, 'Order is no longer eligible for payment');
-
-      await OrderAuditEvent.create([{
-        order: order._id,
-        actorType: 'customer',
-        actorId: userId,
-        eventType: succeeded ? 'payment_succeeded' : 'payment_failed',
-        fromStatus: 'placed',
-        toStatus: resultingOrderStatus,
-        note: succeeded ? 'Simulated payment succeeded.' : 'Simulated payment was declined.',
-      }], { session });
-
-      result = toPaymentResult(updatedOrder, attempt, false);
-    });
+    } catch (error) {
+      if (!isTransactionUnsupportedError(error)) throw error;
+      result = await executePayment(userId, orderId, idempotencyKey, requestFingerprint, outcome);
+    }
 
     if (!result) throw new ApiError(500, 'Payment could not be processed');
     return result;

@@ -19,7 +19,7 @@ async function seedCatalogAdditions() {
       throw new Error(`Missing catalog categories: ${missingCategories.join(', ')}`);
     }
 
-    const operations = catalogAdditions.map(({ categoryName, name, ...product }) => {
+    const operations = catalogAdditions.map(({ categoryName, name, images, ...product }) => {
       const category = categoryIds.get(categoryName);
       if (!category) throw new Error(`Missing catalog category: ${categoryName}`);
 
@@ -27,6 +27,9 @@ async function seedCatalogAdditions() {
         updateOne: {
           filter: { sku: product.sku },
           update: {
+            $set: {
+              images,
+            },
             $setOnInsert: {
               ...product,
               name,

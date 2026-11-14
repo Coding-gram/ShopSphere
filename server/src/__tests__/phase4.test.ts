@@ -1,10 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { vi } from 'vitest';
+import mongoose from 'mongoose';
 import request from 'supertest';
 import { app, clearCollections, setupTestDB, teardownTestDB } from './setup.js';
 import { Category } from '../models/Category.js';
 import { Product } from '../models/Product.js';
 import { Order } from '../models/Order.js';
 import { OrderAuditEvent } from '../models/OrderAuditEvent.js';
+import { isTransactionUnsupportedError } from '../modules/checkout/checkout.service.js';
 
 async function registerCustomer(email: string): Promise<string[]> {
   const response = await request(app)
@@ -226,6 +229,111 @@ describe('Phase 4 address API', () => {
 describe('Phase 4 checkout API', () => {
   beforeEach(async () => {
     await clearCollections();
+  });
+
+  it('identifies standalone MongoDB transaction errors for checkout fallback', () => {
+    const transactionError = Object.assign(
+      new Error('Transaction numbers are only allowed on a replica set member or mongos'),
+      { code: 20 },
+    );
+
+    expect(isTransactionUnsupportedError(transactionError)).toBe(true);
+    expect(isTransactionUnsupportedError(new Error('A different database error'))).toBe(false);
+  });
+
+  it('places an order when the connected MongoDB does not support transactions', async () => {
+    const cookies = await registerCustomer('checkout-standalone@example.com');
+    const product = await createProduct(3, 900);
+
+    await request(app)
+      .post('/api/v1/cart/items')
+      .set('Cookie', cookies)
+      .send({ productId: product._id.toString(), quantity: 1 })
+      .expect(201);
+    const address = await request(app)
+      .post('/api/v1/addresses')
+      .set('Cookie', cookies)
+      .send(addressInput)
+      .expect(201);
+
+    const session = {
+      endSession: vi.fn().mockResolvedValue(undefined),
+      withTransaction: vi.fn().mockRejectedValue(
+        Object.assign(
+          new Error('Transaction numbers are only allowed on a replica set member or mongos'),
+          { code: 20 },
+        ),
+      ),
+    } as unknown as mongoose.ClientSession;
+    const startSession = vi.spyOn(mongoose, 'startSession').mockResolvedValue(session);
+
+    try {
+      const placed = await request(app)
+        .post('/api/v1/checkout')
+        .set('Cookie', cookies)
+        .set('Idempotency-Key', 'checkout-standalone')
+        .send({ addressId: address.body.data._id })
+        .expect(201);
+
+      expect(placed.body.data).toMatchObject({
+        total: 900,
+        status: 'placed',
+        items: [{ product: product._id.toString(), quantity: 1, price: 900 }],
+      });
+      expect(session.withTransaction).toHaveBeenCalledOnce();
+    } finally {
+      startSession.mockRestore();
+    }
+  });
+
+  it('restores stock if standalone checkout cannot reserve every cart item', async () => {
+    const cookies = await registerCustomer('checkout-standalone-stock@example.com');
+    const firstProduct = await createProduct(3, 900);
+    const secondProduct = await createProduct(1, 1200);
+
+    await request(app)
+      .post('/api/v1/cart/items')
+      .set('Cookie', cookies)
+      .send({ productId: firstProduct._id.toString(), quantity: 1 })
+      .expect(201);
+    await request(app)
+      .post('/api/v1/cart/items')
+      .set('Cookie', cookies)
+      .send({ productId: secondProduct._id.toString(), quantity: 1 })
+      .expect(201);
+    const address = await request(app)
+      .post('/api/v1/addresses')
+      .set('Cookie', cookies)
+      .send(addressInput)
+      .expect(201);
+
+    secondProduct.stock = 0;
+    await secondProduct.save();
+
+    const session = {
+      endSession: vi.fn().mockResolvedValue(undefined),
+      withTransaction: vi.fn().mockRejectedValue(
+        Object.assign(
+          new Error('Transaction numbers are only allowed on a replica set member or mongos'),
+          { code: 20 },
+        ),
+      ),
+    } as unknown as mongoose.ClientSession;
+    const startSession = vi.spyOn(mongoose, 'startSession').mockResolvedValue(session);
+
+    try {
+      await request(app)
+        .post('/api/v1/checkout')
+        .set('Cookie', cookies)
+        .set('Idempotency-Key', 'checkout-standalone-stock')
+        .send({ addressId: address.body.data._id })
+        .expect(409);
+
+      expect((await Product.findById(firstProduct._id))?.stock).toBe(3);
+      expect(await Order.countDocuments()).toBe(0);
+    } finally {
+      startSession.mockRestore();
+    }
   });
 
   it('rejects unauthenticated checkout', async () => {

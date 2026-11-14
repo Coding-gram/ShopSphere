@@ -24,6 +24,7 @@ export const createProductSchema = z.object({
     tags: z.array(z.string().trim()).optional(),
     isActive: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
+    isNewArrival: z.boolean().optional(),
   }).strict(),
 });
 
@@ -51,6 +52,7 @@ export const updateProductSchema = z.object({
     tags: z.array(z.string().trim()).optional(),
     isActive: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
+    isNewArrival: z.boolean().optional(),
   }).strict(),
 });
 
@@ -67,6 +69,7 @@ export const productQuerySchema = z.object({
       maxPrice: z.coerce.number().min(0).optional(),
       featured: z.coerce.boolean().optional(),
       sale: z.coerce.boolean().optional(),
+      newArrivals: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
     })
     .refine(
       ({ minPrice, maxPrice }) =>

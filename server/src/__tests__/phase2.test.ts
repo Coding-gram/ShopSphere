@@ -400,6 +400,7 @@ describe('Product API', () => {
         sku: 'TST-ALPHA-001',
         tags: ['alpha', 'test'],
         isFeatured: true,
+        isNewArrival: true,
       },
       {
         name: 'Product Beta',
@@ -472,6 +473,24 @@ describe('Product API', () => {
       expect(res.body.data.length).toBeGreaterThanOrEqual(1);
       const names = res.body.data.map((p: { name: string }) => p.name);
       expect(names).toContain('Product Alpha');
+    });
+
+    it('C2b: New Arrivals returns only flagged products', async () => {
+      const res = await request(app).get('/api/v1/products?newArrivals=true');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0]).toMatchObject({
+        name: 'Product Alpha',
+        isNewArrival: true,
+      });
+    });
+
+    it('C2c: invalid New Arrivals filter is rejected', async () => {
+      const res = await request(app).get('/api/v1/products?newArrivals=recent');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
     });
 
     it('C3: filters by category', async () => {
