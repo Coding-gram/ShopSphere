@@ -1,0 +1,808 @@
+openapi: 3.0.3
+info:
+  title: ShopSphere API
+  version: 1.0.0
+  description: |
+    Implemented REST API for the ShopSphere storefront and admin console.
+    All routes are mounted below /api/v1. Authentication uses the HTTP-only
+    cookie named token.
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development
+tags:
+  - name: Health
+  - name: Auth
+  - name: Catalog
+  - name: Cart
+  - name: Addresses
+  - name: Checkout
+  - name: Orders
+  - name: Payments
+  - name: Admin
+security:
+  - cookieAuth: []
+paths:
+  /health:
+    get:
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthResponse' }
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201': { $ref: '#/components/responses/CreatedUser' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/UserResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      responses:
+        '200': { $ref: '#/components/responses/NullableSuccess' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/me:
+    get:
+      tags: [Auth]
+      responses:
+        '200': { $ref: '#/components/responses/UserResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateProfileRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/UserResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /auth/change-password:
+    put:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/NullableSuccess' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /products:
+    get:
+      tags: [Catalog]
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/ProductLimit' }
+        - { name: sort, in: query, schema: { type: string, enum: [price, createdAt, name, avgRating] } }
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc] } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: minPrice, in: query, schema: { type: number, minimum: 0 } }
+        - { name: maxPrice, in: query, schema: { type: number, minimum: 0 } }
+        - { name: featured, in: query, schema: { type: boolean } }
+        - { name: sale, in: query, schema: { type: boolean } }
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedProducts' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    post:
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '201': { $ref: '#/components/responses/ProductResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /products/{id}:
+    get:
+      tags: [Catalog]
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/ProductIdOrSlug' }
+      responses:
+        '200': { $ref: '#/components/responses/ProductResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/ProductId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductUpdateInput' }
+      responses:
+        '200': { $ref: '#/components/responses/ProductResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/ProductId' }]
+      responses:
+        '200': { $ref: '#/components/responses/NullableSuccess' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /products/featured:
+    get:
+      tags: [Catalog]
+      security: []
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, default: 8 } }
+      responses:
+        '200': { $ref: '#/components/responses/Products' }
+  /categories:
+    get:
+      tags: [Catalog]
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Categories' }
+    post:
+      tags: [Admin]
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryInput' }
+      responses:
+        '201': { $ref: '#/components/responses/CategoryResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /categories/{id}:
+    get:
+      tags: [Catalog]
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/CategoryIdOrSlug' }
+      responses:
+        '200': { $ref: '#/components/responses/CategoryResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/CategoryId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryUpdateInput' }
+      responses:
+        '200': { $ref: '#/components/responses/CategoryResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/CategoryId' }]
+      responses:
+        '200': { $ref: '#/components/responses/NullableSuccess' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /cart:
+    get:
+      tags: [Cart]
+      responses:
+        '200': { $ref: '#/components/responses/CartResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /cart/items:
+    post:
+      tags: [Cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddCartItemRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/CartResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /cart/items/{itemId}:
+    patch:
+      tags: [Cart]
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuantityRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/CartResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Cart]
+      parameters:
+        - { $ref: '#/components/parameters/ItemId' }
+      responses:
+        '200': { $ref: '#/components/responses/CartResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /addresses:
+    get:
+      tags: [Addresses]
+      responses:
+        '200': { $ref: '#/components/responses/Addresses' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Addresses]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddressInput' }
+      responses:
+        '201': { $ref: '#/components/responses/AddressResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /addresses/{addressId}:
+    put:
+      tags: [Addresses]
+      parameters:
+        - { $ref: '#/components/parameters/AddressId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddressInput' }
+      responses:
+        '200': { $ref: '#/components/responses/AddressResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Addresses]
+      parameters:
+        - { $ref: '#/components/parameters/AddressId' }
+      responses:
+        '200': { $ref: '#/components/responses/AddressResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /checkout:
+    post:
+      tags: [Checkout]
+      parameters:
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [addressId]
+              properties:
+                addressId: { $ref: '#/components/schemas/ObjectId' }
+      responses:
+        '201': { $ref: '#/components/responses/OrderResponse' }
+        '200': { description: Existing idempotent order replayed, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /orders:
+    get:
+      tags: [Orders]
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/OrderLimit' }
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedOrders' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /orders/{orderId}:
+    get:
+      tags: [Orders]
+      parameters:
+        - { $ref: '#/components/parameters/OrderId' }
+      responses:
+        '200': { $ref: '#/components/responses/OrderResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /orders/{orderId}/cancel:
+    post:
+      tags: [Orders]
+      parameters:
+        - { $ref: '#/components/parameters/OrderId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 300 }
+      responses:
+        '200': { description: Existing or cancelled order, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '201': { $ref: '#/components/responses/OrderResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /orders/{orderId}/payments:
+    post:
+      tags: [Payments]
+      parameters:
+        - { $ref: '#/components/parameters/OrderId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [outcome]
+              properties:
+                outcome: { type: string, enum: [success, failure] }
+      responses:
+        '200': { description: Payment result or replay, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '201': { description: Payment attempt recorded, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      parameters:
+        - { $ref: '#/components/parameters/DateFrom' }
+        - { $ref: '#/components/parameters/DateTo' }
+      responses:
+        '200': { description: Dashboard metrics, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/orders:
+    get:
+      tags: [Admin]
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/AdminOrderLimit' }
+        - { name: status, in: query, schema: { type: string, enum: [placed, paid, packed, shipped, delivered, cancelled] } }
+        - { name: paymentStatus, in: query, schema: { type: string, enum: [pending, paid, failed, refunded] } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date } }
+        - { name: dateTo, in: query, schema: { type: string, format: date } }
+        - { name: search, in: query, schema: { type: string, minLength: 1, maxLength: 100 } }
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedOrders' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/orders/{orderId}:
+    get:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      responses:
+        '200': { $ref: '#/components/responses/OrderResponse' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /admin/orders/{orderId}/status:
+    patch:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/OrderId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [packed, shipped, delivered] }
+                note: { type: string, minLength: 1, maxLength: 300 }
+      responses:
+        '200': { $ref: '#/components/responses/OrderResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /admin/inventory/{productId}/adjustments:
+    post:
+      tags: [Admin]
+      parameters:
+        - { $ref: '#/components/parameters/InventoryProductId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [delta, reason]
+              properties:
+                delta: { type: integer, minimum: -100000, maximum: 100000, not: { const: 0 } }
+                reason: { type: string, minLength: 3, maxLength: 300 }
+      responses:
+        '200': { description: New stock quantity, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /admin/customers:
+    get:
+      tags: [Admin]
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/AdminOrderLimit' }
+        - { name: search, in: query, schema: { type: string, minLength: 1, maxLength: 100 } }
+        - { name: isActive, in: query, schema: { type: boolean } }
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedUsers' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/customers/{customerId}:
+    get:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/CustomerId' }]
+      responses:
+        '200': { $ref: '#/components/responses/UserResponse' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /admin/customers/{customerId}/status:
+    patch:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/CustomerId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [isActive]
+              properties:
+                isActive: { type: boolean }
+      responses:
+        '200': { $ref: '#/components/responses/UserResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/audit-events:
+    get:
+      tags: [Admin]
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/AdminOrderLimit' }
+        - { name: entity, in: query, schema: { type: string, enum: [order] } }
+        - { name: orderId, in: query, schema: { type: string } }
+        - { name: actorType, in: query, schema: { type: string, enum: [customer, admin, system] } }
+        - { name: actorId, in: query, schema: { type: string } }
+        - { name: eventType, in: query, schema: { type: string, enum: [order_placed, order_status_changed, payment_attempted, payment_succeeded, payment_failed, order_cancelled, legacy_status_migrated] } }
+        - { name: dateFrom, in: query, schema: { type: string, format: date } }
+        - { name: dateTo, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedAuditEvents' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/products:
+    get:
+      tags: [Admin]
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/AdminOrderLimit' }
+        - { name: search, in: query, schema: { type: string, minLength: 1, maxLength: 100 } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: isActive, in: query, schema: { type: boolean } }
+        - { name: lowStock, in: query, schema: { type: boolean } }
+      responses:
+        '200': { $ref: '#/components/responses/PaginatedProducts' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '201': { $ref: '#/components/responses/ProductResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/products/{id}:
+    put:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/ProductId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductUpdateInput' }
+      responses:
+        '200': { $ref: '#/components/responses/ProductResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/ProductId' }]
+      responses:
+        '200': { $ref: '#/components/responses/NullableSuccess' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/categories:
+    get:
+      tags: [Admin]
+      responses:
+        '200': { $ref: '#/components/responses/Categories' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryInput' }
+      responses:
+        '201': { $ref: '#/components/responses/CategoryResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /admin/categories/{id}:
+    put:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/CategoryId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryUpdateInput' }
+      responses:
+        '200': { $ref: '#/components/responses/CategoryResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Admin]
+      parameters: [{ $ref: '#/components/parameters/CategoryId' }]
+      responses:
+        '200': { $ref: '#/components/responses/NullableSuccess' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+  parameters:
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    ProductLimit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 12 } }
+    OrderLimit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 10 } }
+    AdminOrderLimit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9_-]+$' } }
+    ProductIdOrSlug: { name: id, in: path, required: true, description: Product slug for GET; ObjectId for admin mutations, schema: { type: string } }
+    CategoryIdOrSlug: { name: id, in: path, required: true, description: Category slug for GET; ObjectId for admin mutations, schema: { type: string } }
+    ItemId: { name: itemId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    AddressId: { name: addressId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    OrderId: { name: orderId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    ProductId: { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    InventoryProductId: { name: productId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    CategoryId: { name: id, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    CustomerId: { name: customerId, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectId' } }
+    DateFrom: { name: dateFrom, in: query, schema: { type: string, format: date } }
+    DateTo: { name: dateTo, in: query, schema: { type: string, format: date } }
+  schemas:
+    ObjectId: { type: string, pattern: '^[a-fA-F0-9]{24}$' }
+    ApiResponse:
+      type: object
+      required: [success, statusCode, message, data]
+      properties:
+        success: { type: boolean, example: true }
+        statusCode: { type: integer }
+        message: { type: string }
+        data: {}
+    SuccessResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data: { type: object, properties: { status: { type: string, example: ok }, timestamp: { type: string, format: date-time } } }
+    HealthResponse:
+      type: object
+      required: [success, status, timestamp]
+      properties:
+        success: { type: boolean, example: true }
+        status: { type: string, example: ok }
+        timestamp: { type: string, format: date-time }
+    ErrorResponse:
+      type: object
+      required: [success, statusCode, message]
+      properties:
+        success: { type: boolean, example: false }
+        statusCode: { type: integer }
+        message: { type: string }
+        errors: { type: array, items: { $ref: '#/components/schemas/FieldError' } }
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 128 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1 }
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        phone: { type: string }
+        avatar: { type: string, format: uri }
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 8, maxLength: 128 }
+    AddressInput:
+      type: object
+      required: [fullName, phone, street, city, state, pincode, country]
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 100 }
+        phone: { type: string, pattern: '^\\+?[1-9]\\d{7,14}$' }
+        street: { type: string, minLength: 5, maxLength: 300 }
+        city: { type: string, minLength: 2, maxLength: 100 }
+        state: { type: string, minLength: 2, maxLength: 100 }
+        pincode: { type: string, pattern: '^\\d{6}$' }
+        country: { type: string, minLength: 2, maxLength: 100 }
+        isDefault: { type: boolean }
+    AddCartItemRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId: { $ref: '#/components/schemas/ObjectId' }
+        quantity: { type: integer, minimum: 1, maximum: 10 }
+    QuantityRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity: { type: integer, minimum: 1, maximum: 10 }
+    CategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        description: { type: string, maxLength: 500 }
+        image: { type: string, format: uri }
+        parent: { type: string }
+        isActive: { type: boolean }
+    CategoryUpdateInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        description: { type: string, maxLength: 500 }
+        image: { type: string, format: uri, nullable: true }
+        parent: { type: string, nullable: true }
+        isActive: { type: boolean }
+    ProductInput:
+      type: object
+      required: [name, description, price, category, sku]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 200 }
+        description: { type: string, minLength: 10, maxLength: 5000 }
+        price: { type: number, minimum: 0 }
+        compareAtPrice: { type: number, minimum: 0, nullable: true }
+        category: { type: string }
+        images: { type: array, items: { type: string, format: uri } }
+        variants:
+          type: array
+          items:
+            type: object
+            required: [name, value, stock]
+            properties:
+              name: { type: string, minLength: 1 }
+              value: { type: string, minLength: 1 }
+              sku: { type: string }
+              price: { type: number, minimum: 0 }
+              stock: { type: integer, minimum: 0 }
+        stock: { type: integer, minimum: 0, default: 0 }
+        sku: { type: string, minLength: 1, maxLength: 50 }
+        tags: { type: array, items: { type: string } }
+        isActive: { type: boolean }
+        isFeatured: { type: boolean }
+    ProductUpdateInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 200 }
+        description: { type: string, minLength: 10, maxLength: 5000 }
+        price: { type: number, minimum: 0 }
+        compareAtPrice: { type: number, minimum: 0, nullable: true }
+        category: { type: string }
+        images: { type: array, items: { type: string, format: uri } }
+        variants: { type: array, items: { type: object } }
+        sku: { type: string, minLength: 1, maxLength: 50 }
+        tags: { type: array, items: { type: string } }
+        isActive: { type: boolean }
+        isFeatured: { type: boolean }
+    User:
+      type: object
+      properties:
+        _id: { $ref: '#/components/schemas/ObjectId' }
+        name: { type: string }
+        email: { type: string, format: email }
+        role: { type: string, enum: [customer, admin] }
+        phone: { type: string }
+        avatar: { type: string }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Product: { type: object, additionalProperties: true }
+    Category: { type: object, additionalProperties: true }
+    Cart: { type: object, additionalProperties: true }
+    Address: { type: object, additionalProperties: true }
+    Order: { type: object, additionalProperties: true }
+    Pagination:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+        hasMore: { type: boolean }
+    PaginatedData:
+      type: object
+      properties:
+        items: { type: array, items: {} }
+        pagination: { $ref: '#/components/schemas/Pagination' }
+    UserResponse: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { $ref: '#/components/schemas/User' } } }] }
+    ProductResponse: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { $ref: '#/components/schemas/Product' } } }] }
+    CategoryResponse: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { $ref: '#/components/schemas/Category' } } }] }
+    CartResponse: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { $ref: '#/components/schemas/Cart' } } }] }
+    AddressResponse: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { $ref: '#/components/schemas/Address' } } }] }
+    OrderResponse: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { $ref: '#/components/schemas/Order' } } }] }
+    Products:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Product' } }
+    Categories:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Category' } }
+    Addresses:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Address' } }
+    PaginatedProducts: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Product' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }] }
+    PaginatedOrders: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/Order' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }] }
+    PaginatedUsers: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { type: array, items: { $ref: '#/components/schemas/User' } }, pagination: { $ref: '#/components/schemas/Pagination' } } }] }
+    PaginatedAuditEvents: { allOf: [{ $ref: '#/components/schemas/ApiResponse' }, { type: object, properties: { data: { type: array, items: { type: object } }, pagination: { $ref: '#/components/schemas/Pagination' } } }] }
+  responses:
+    UserResponse: { description: User response, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+    CreatedUser: { description: Created user, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+    ProductResponse: { description: Product response, content: { application/json: { schema: { $ref: '#/components/schemas/ProductResponse' } } } }
+    CategoryResponse: { description: Category response, content: { application/json: { schema: { $ref: '#/components/schemas/CategoryResponse' } } } }
+    CartResponse: { description: Cart response, content: { application/json: { schema: { $ref: '#/components/schemas/CartResponse' } } } }
+    AddressResponse: { description: Address response, content: { application/json: { schema: { $ref: '#/components/schemas/AddressResponse' } } } }
+    OrderResponse: { description: Order response, content: { application/json: { schema: { $ref: '#/components/schemas/OrderResponse' } } } }
+    PaginatedProducts: { description: Paginated products, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedProducts' } } } }
+    PaginatedOrders: { description: Paginated orders, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedOrders' } } } }
+    PaginatedUsers: { description: Paginated users, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedUsers' } } } }
+    PaginatedAuditEvents: { description: Paginated audit events, content: { application/json: { schema: { $ref: '#/components/schemas/PaginatedAuditEvents' } } } }
+    Products: { description: Product list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+    Categories: { description: Category list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+    Addresses: { description: Address list, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+    NullableSuccess: { description: Successful operation, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResponse' } } } }
+    ValidationError: { description: Validation error, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Unauthorized: { description: Authentication required, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Forbidden: { description: Insufficient permissions, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    NotFound: { description: Resource not found, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    Conflict: { description: State or idempotency conflict, content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
