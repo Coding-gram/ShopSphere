@@ -16,6 +16,7 @@ const Cart = lazy(() => import('@/pages/Cart'));
 const Checkout = lazy(() => import('@/pages/Checkout'));
 const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const AdminProducts = lazy(() => import('@/pages/admin/AdminProducts'));
 const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
 const AdminOrderDetail = lazy(() => import('@/pages/admin/AdminOrderDetail'));
 const Orders = lazy(() => import('@/pages/Orders'));
@@ -91,6 +92,7 @@ export const router = createBrowserRouter([
     element: <AdminRoute><SuspensePage><AdminLayout /></SuspensePage></AdminRoute>,
     children: [
       { index: true, element: <SuspensePage><AdminDashboard /></SuspensePage> },
+      { path: 'products', element: <SuspensePage><AdminProducts /></SuspensePage> },
       { path: 'orders', element: <SuspensePage><AdminOrders /></SuspensePage> },
       { path: 'orders/:orderId', element: <SuspensePage><AdminOrderDetail /></SuspensePage> },
     ],

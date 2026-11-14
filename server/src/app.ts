@@ -9,6 +9,7 @@ import { ApiError } from './utils/ApiError.js';
 // ── Route imports ────────────────────────────────────────────────────────────
 import authRoutes from './modules/auth/auth.routes.js';
 import productRoutes from './modules/products/products.routes.js';
+import adminProductRoutes from './modules/products/adminProducts.routes.js';
 import categoryRoutes from './modules/categories/categories.routes.js';
 import cartRoutes from './modules/cart/cart.routes.js';
 import addressRoutes from './modules/addresses/addresses.routes.js';
@@ -47,6 +48,7 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/orders', paymentRoutes);
 app.use('/api/v1/admin/orders', adminOrderRoutes);
 app.use('/api/v1/admin/dashboard', adminDashboardRoutes);
+app.use('/api/v1/admin/products', adminProductRoutes);
 
 // ── 404 handler for unknown routes ──────────────────────────────────────────
 app.all('/{*path}', (req, _res, next) => {

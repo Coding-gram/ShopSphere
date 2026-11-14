@@ -16,6 +16,15 @@ interface ProductQuery {
   featured?: boolean;
 }
 
+interface AdminProductQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  isActive?: boolean;
+  lowStock?: string;
+}
+
 // ── List products (public) ───────────────────────────────────────────────────
 
 export async function listProducts(query: ProductQuery) {
@@ -82,6 +91,24 @@ export async function listProducts(query: ProductQuery) {
       hasMore: page * limit < total,
     },
   };
+}
+
+export async function listAdminProducts(query: AdminProductQuery) {
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 20;
+  const filter: Record<string, unknown> = {};
+  if (query.isActive !== undefined) filter.isActive = query.isActive;
+  if (query.category) filter.category = query.category;
+  if (query.lowStock === 'true') filter.stock = { $lte: 5 };
+  if (query.search) filter.$or = [
+    { name: new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+    { sku: new RegExp(query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+  ];
+  const [items, total] = await Promise.all([
+    Product.find(filter).sort({ updatedAt: -1, _id: -1 }).skip((page - 1) * limit).limit(limit).populate('category', 'name slug').lean(),
+    Product.countDocuments(filter),
+  ]);
+  return { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasMore: page * limit < total } };
 }
 
 // ── Get single product by slug (public) ──────────────────────────────────────

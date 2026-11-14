@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as productsController from './products.controller.js';
 import { validate } from '../../middleware/validate.js';
-import { protect, requireAdmin } from '../../middleware/auth.js';
+import { protect, requireActiveAdmin, requireAdmin } from '../../middleware/auth.js';
 import {
   createProductSchema,
   updateProductSchema,
@@ -16,9 +16,9 @@ router.get('/featured', productsController.getFeatured);
 router.get('/:slug', productsController.getProduct);
 
 // Admin
-router.post('/', protect, requireAdmin, validate(createProductSchema), productsController.createProduct);
-router.put('/:id', protect, requireAdmin, validate(updateProductSchema), productsController.updateProduct);
-router.delete('/:id', protect, requireAdmin, productsController.deleteProduct);
+router.post('/', protect, requireAdmin, requireActiveAdmin, validate(createProductSchema), productsController.createProduct);
+router.put('/:id', protect, requireAdmin, requireActiveAdmin, validate(updateProductSchema), productsController.updateProduct);
+router.delete('/:id', protect, requireAdmin, requireActiveAdmin, productsController.deleteProduct);
 
 export default router;
 

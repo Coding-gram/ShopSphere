@@ -75,3 +75,14 @@ export const productQuerySchema = z.object({
     ),
 });
 
+export const adminProductQuerySchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1).default(1).optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20).optional(),
+    search: z.string().trim().min(1).max(100).optional(),
+    category: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid category identifier').optional(),
+    isActive: z.enum(['true', 'false']).transform((value) => value === 'true').optional(),
+    lowStock: z.enum(['true']).optional(),
+  }).strict(),
+});
+

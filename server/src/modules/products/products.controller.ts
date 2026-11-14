@@ -14,6 +14,11 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const getAdminProducts = asyncHandler(async (req: Request, res: Response) => {
+  const result = await productService.listAdminProducts(req.query);
+  res.status(200).json({ success: true, statusCode: 200, message: 'Admin products retrieved', data: result.items, pagination: result.pagination });
+});
+
 export const getProduct = asyncHandler(async (req: Request, res: Response) => {
   const product = await productService.getProductBySlug(req.params.slug as string);
   sendResponse(res, 200, 'Product retrieved', product);
