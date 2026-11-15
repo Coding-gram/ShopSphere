@@ -18,7 +18,7 @@ function setTokenCookie(res: Response, token: string): void {
   res.cookie('token', token, {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge,
     path: '/',
     ...(env.COOKIE_DOMAIN && { domain: env.COOKIE_DOMAIN }),
@@ -84,7 +84,7 @@ export function logoutUser(res: Response): void {
   res.cookie('token', '', {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
     expires: new Date(0),
     path: '/',
   });
