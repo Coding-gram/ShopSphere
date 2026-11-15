@@ -45,7 +45,19 @@ app.use(
     },
   }),
 );
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow requests with no origin (curl, server-to-server) or from vercel/localhost
+      if (!origin || origin.endsWith('.vercel.app') || origin.includes('localhost') || origin === env.CLIENT_URL) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
