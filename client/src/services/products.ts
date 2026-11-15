@@ -1,5 +1,10 @@
 import api from '@/lib/api';
 import type { ApiResponse, PaginatedResponse, Product } from '@/types';
+import {
+  FALLBACK_PRODUCTS,
+  getFallbackProduct,
+  getFallbackProducts,
+} from '@/data/fallbackCatalog';
 
 export interface ProductFilters {
   page?: number;
@@ -16,7 +21,7 @@ export interface ProductFilters {
 }
 
 export const productService = {
-  getProducts(filters: ProductFilters = {}) {
+  async getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams();
     if (filters.page) params.set('page', String(filters.page));
     if (filters.limit) params.set('limit', String(filters.limit));
@@ -31,18 +36,45 @@ export const productService = {
     if (filters.newArrivals) params.set('newArrivals', 'true');
 
     const query = params.toString();
-    return api.get<unknown, PaginatedResponse<Product>>(
-      `/products${query ? `?${query}` : ''}`
-    );
+    try {
+      return await api.get<unknown, PaginatedResponse<Product>>(
+        `/products${query ? `?${query}` : ''}`
+      );
+    } catch {
+      return getFallbackProducts(filters);
+    }
   },
 
-  getProduct(slug: string) {
-    return api.get<unknown, ApiResponse<Product>>(`/products/${slug}`);
+  async getProduct(slug: string): Promise<ApiResponse<Product>> {
+    try {
+      return await api.get<unknown, ApiResponse<Product>>(`/products/${slug}`);
+    } catch {
+      const match = getFallbackProduct(slug);
+      if (match) {
+        return {
+          success: true,
+          statusCode: 200,
+          message: 'Product retrieved from fallback',
+          data: match,
+        };
+      }
+      throw new Error('Product not found');
+    }
   },
 
-  getFeatured(limit = 8) {
-    return api.get<unknown, ApiResponse<Product[]>>(
-      `/products/featured?limit=${limit}`
-    );
+  async getFeatured(limit = 8): Promise<ApiResponse<Product[]>> {
+    try {
+      return await api.get<unknown, ApiResponse<Product[]>>(
+        `/products/featured?limit=${limit}`
+      );
+    } catch {
+      const featured = FALLBACK_PRODUCTS.filter((p) => p.isFeatured).slice(0, limit);
+      return {
+        success: true,
+        statusCode: 200,
+        message: 'Featured products retrieved from fallback',
+        data: featured,
+      };
+    }
   },
 };
