@@ -6,10 +6,22 @@ const RETRY_DELAY_MS = 5000;
 
 export function sanitizeMongoUri(rawUri: string): string {
   let cleaned = rawUri.trim().replace(/^["']|["']$/g, '');
-  // Auto-remove literal angle brackets <...> if user didn't delete them around password
+
+  // Auto-remove literal angle brackets <...> if user left them around password
   if (cleaned.includes(':<') && cleaned.includes('>@')) {
     cleaned = cleaned.replace(/:<([^>]+)>@/, ':$1@');
   }
+
+  // Auto-encode @ in password if present (e.g. mongodb+srv://user:pass@123@host)
+  const match = cleaned.match(/^(mongodb(?:\+srv)?:\/\/)([^:]+):(.*)@([^@\/]+)(.*)$/);
+  if (match) {
+    const [, proto, user, pass, host, rest] = match;
+    if (pass.includes('@')) {
+      const encodedPass = pass.replace(/@/g, '%40');
+      cleaned = `${proto}${user}:${encodedPass}@${host}${rest}`;
+    }
+  }
+
   return cleaned;
 }
 
