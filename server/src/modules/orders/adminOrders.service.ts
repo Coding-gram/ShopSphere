@@ -1,4 +1,4 @@
-import mongoose, { type QueryFilter } from 'mongoose';
+import mongoose, { type ClientSession, type QueryFilter } from 'mongoose';
 import { Order, type IOrder, type OrderStatus, type PaymentStatus } from '../../models/Order.js';
 import { OrderAuditEvent } from '../../models/OrderAuditEvent.js';
 import { User } from '../../models/User.js';
@@ -96,6 +96,50 @@ export async function getAdminOrder(orderId: string) {
   return view;
 }
 
+async function executeTransition(
+  adminId: string,
+  orderId: string,
+  nextStatus: AdminLifecycleStatus,
+  note?: string,
+  session?: ClientSession,
+): Promise<IOrder | undefined> {
+  const activeAdmin = await User.exists({ _id: adminId, role: 'admin', isActive: true }).session(session ?? null);
+  if (!activeAdmin) throw new ApiError(403, 'An active admin account is required.');
+
+  const order = await Order.findById(orderId).session(session ?? null);
+  if (!order) throw new ApiError(404, 'Order not found');
+  assertOrderTransition(order.status, nextStatus);
+
+  const auditNote = note ?? `Order marked ${nextStatus} by an administrator`;
+  const updatedOrder = await Order.findOneAndUpdate(
+    { _id: order._id, status: order.status },
+    {
+      $set: { status: nextStatus },
+      $push: { statusHistory: { status: nextStatus, timestamp: new Date(), note: auditNote } },
+    },
+    { returnDocument: 'after', ...(session ? { session } : {}) },
+  );
+  if (!updatedOrder) return undefined;
+
+  await OrderAuditEvent.create([{
+    order: updatedOrder._id,
+    actorType: 'admin',
+    actorId: adminId,
+    eventType: 'order_status_changed',
+    fromStatus: order.status,
+    toStatus: nextStatus,
+    note: auditNote,
+  }], session ? { session } : {});
+
+  return updatedOrder;
+}
+
+function isTransactionUnsupportedError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return ('code' in error && (error as Error & { code?: number }).code === 20)
+    || error.message.includes('Transaction numbers are only allowed');
+}
+
 export async function transitionAdminOrder(
   adminId: string,
   orderId: string,
@@ -107,37 +151,14 @@ export async function transitionAdminOrder(
   try {
     let transitionedOrder: IOrder | undefined;
 
-    await session.withTransaction(async () => {
-      const activeAdmin = await User.exists({ _id: adminId, role: 'admin', isActive: true }).session(session);
-      if (!activeAdmin) throw new ApiError(403, 'An active admin account is required.');
-
-      const order = await Order.findById(orderId).session(session);
-      if (!order) throw new ApiError(404, 'Order not found');
-      assertOrderTransition(order.status, nextStatus);
-
-      const auditNote = note ?? `Order marked ${nextStatus} by an administrator`;
-      const updatedOrder = await Order.findOneAndUpdate(
-        { _id: order._id, status: order.status },
-        {
-          $set: { status: nextStatus },
-          $push: { statusHistory: { status: nextStatus, timestamp: new Date(), note: auditNote } },
-        },
-        { returnDocument: 'after', session },
-      );
-      if (!updatedOrder) return;
-
-      await OrderAuditEvent.create([{
-        order: updatedOrder._id,
-        actorType: 'admin',
-        actorId: adminId,
-        eventType: 'order_status_changed',
-        fromStatus: order.status,
-        toStatus: nextStatus,
-        note: auditNote,
-      }], { session });
-
-      transitionedOrder = updatedOrder;
-    });
+    try {
+      await session.withTransaction(async () => {
+        transitionedOrder = await executeTransition(adminId, orderId, nextStatus, note, session);
+      });
+    } catch (error) {
+      if (!isTransactionUnsupportedError(error)) throw error;
+      transitionedOrder = await executeTransition(adminId, orderId, nextStatus, note);
+    }
 
     if (!transitionedOrder) throw new ApiError(409, 'Order status changed concurrently. Refresh and try again.');
     const [view] = await serializeAdminOrders([transitionedOrder]);

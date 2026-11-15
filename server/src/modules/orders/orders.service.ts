@@ -1,11 +1,17 @@
 import { createHash } from 'node:crypto';
-import mongoose from 'mongoose';
+import mongoose, { type ClientSession } from 'mongoose';
 import { Order, type IOrder } from '../../models/Order.js';
 import { OrderAuditEvent } from '../../models/OrderAuditEvent.js';
 import { Product } from '../../models/Product.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { assertOrderTransition } from './orderStateMachine.js';
 import { toOrderView } from './orderView.js';
+
+function isTransactionUnsupportedError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return ('code' in error && (error as Error & { code?: number }).code === 20)
+    || error.message.includes('Transaction numbers are only allowed');
+}
 
 interface CustomerOrderQuery {
   page?: string | number;
@@ -82,15 +88,12 @@ export async function cancelCustomerOrder(
   try {
     let result: { replayed: boolean; order: ReturnType<typeof toOrderView> } | undefined;
 
-    await session.withTransaction(async () => {
-      const order = await Order.findOne({ _id: orderId, user: userId }).session(session);
+    async function executeCancellation(s?: ClientSession) {
+      const order = await Order.findOne({ _id: orderId, user: userId }).session(s ?? null);
       if (!order) throw new ApiError(404, 'Order not found');
 
-      const inTransactionReplay = await findCancellationReplay(userId, idempotencyKey, requestFingerprint, session);
-      if (inTransactionReplay) {
-        result = inTransactionReplay;
-        return;
-      }
+      const inTransactionReplay = await findCancellationReplay(userId, idempotencyKey, requestFingerprint, s);
+      if (inTransactionReplay) { result = inTransactionReplay; return; }
 
       if (order.status !== 'placed' && order.status !== 'paid') {
         throw new ApiError(409, 'Order is not eligible for cancellation');
@@ -105,15 +108,9 @@ export async function cancelCustomerOrder(
             cancellationIdempotencyKey: idempotencyKey,
             cancellationRequestFingerprint: requestFingerprint,
           },
-          $push: {
-            statusHistory: {
-              status: 'cancelled',
-              timestamp: new Date(),
-              note: `Cancelled: ${reason}`,
-            },
-          },
+          $push: { statusHistory: { status: 'cancelled', timestamp: new Date(), note: `Cancelled: ${reason}` } },
         },
-        { returnDocument: 'after', session },
+        { returnDocument: 'after', ...(s ? { session: s } : {}) },
       );
 
       if (!cancelledOrder) return;
@@ -122,7 +119,7 @@ export async function cancelCustomerOrder(
         const restoredProduct = await Product.updateOne(
           { _id: item.product },
           { $inc: { stock: item.quantity } },
-          { session },
+          s ? { session: s } : {},
         );
         if (restoredProduct.matchedCount !== 1) {
           throw new ApiError(409, 'An ordered product can no longer be restored');
@@ -137,10 +134,17 @@ export async function cancelCustomerOrder(
         fromStatus: order.status,
         toStatus: 'cancelled',
         note: `Cancelled: ${reason}`,
-      }], { session });
+      }], s ? { session: s } : {});
 
       result = { replayed: false, order: toOrderView(cancelledOrder) };
-    });
+    }
+
+    try {
+      await session.withTransaction(() => executeCancellation(session));
+    } catch (error) {
+      if (!isTransactionUnsupportedError(error)) throw error;
+      await executeCancellation();
+    }
 
     if (result) return result;
 
