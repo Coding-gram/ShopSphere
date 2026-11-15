@@ -4,12 +4,27 @@ import { env } from './env.js';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 
+export function sanitizeMongoUri(rawUri: string): string {
+  let cleaned = rawUri.trim().replace(/^["']|["']$/g, '');
+  // Auto-remove literal angle brackets <...> if user didn't delete them around password
+  if (cleaned.includes(':<') && cleaned.includes('>@')) {
+    cleaned = cleaned.replace(/:<([^>]+)>@/, ':$1@');
+  }
+  return cleaned;
+}
+
+export function maskMongoUri(uri: string): string {
+  return uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
+}
+
 export async function connectDB(): Promise<void> {
   let retries = 0;
+  const connectionUri = sanitizeMongoUri(env.MONGODB_URI);
+  console.log(`📡 Connecting to MongoDB: ${maskMongoUri(connectionUri)}`);
 
   while (retries < MAX_RETRIES) {
     try {
-      await mongoose.connect(env.MONGODB_URI);
+      await mongoose.connect(connectionUri);
       console.log(`✅ MongoDB connected: ${mongoose.connection.host}`);
       return;
     } catch (error) {
