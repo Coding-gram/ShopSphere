@@ -16,13 +16,19 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
-const parsed = envSchema.safeParse(process.env);
+export type Env = z.infer<typeof envSchema>;
 
-if (!parsed.success) {
-  console.error('❌ Invalid environment variables:');
-  console.error(parsed.error.flatten().fieldErrors);
+let envData: Env;
+try {
+  envData = envSchema.parse(process.env);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    console.error('❌ Invalid environment variables:');
+    console.error(error.flatten().fieldErrors);
+  } else {
+    console.error('❌ Environment validation failed:', error);
+  }
   process.exit(1);
 }
 
-export const env = parsed.data;
-export type Env = z.infer<typeof envSchema>;
+export const env: Env = envData;

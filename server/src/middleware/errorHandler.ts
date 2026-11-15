@@ -45,7 +45,7 @@ export function errorHandler(
   if (err instanceof mongoose.Error.ValidationError) {
     const errors = Object.entries(err.errors).map(([field, e]) => ({
       field,
-      message: e.message,
+      message: (e as any)?.message || String(e),
     }));
 
     res.status(400).json({
