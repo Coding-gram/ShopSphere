@@ -1,9 +1,11 @@
 import app from './app.js';
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
+import { seedDatabaseIfNeeded } from './db/autoSeed.js';
 
 async function bootstrap(): Promise<void> {
   await connectDB();
+  await seedDatabaseIfNeeded();
 
   const server = app.listen(env.PORT, () => {
     console.log(
