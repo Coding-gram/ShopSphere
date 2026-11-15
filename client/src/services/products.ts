@@ -37,9 +37,13 @@ export const productService = {
 
     const query = params.toString();
     try {
-      return await api.get<unknown, PaginatedResponse<Product>>(
+      const res = await api.get<unknown, PaginatedResponse<Product>>(
         `/products${query ? `?${query}` : ''}`
       );
+      if (!res || !Array.isArray(res.data) || res.data.length === 0) {
+        return getFallbackProducts(filters);
+      }
+      return res;
     } catch {
       return getFallbackProducts(filters);
     }
@@ -47,7 +51,19 @@ export const productService = {
 
   async getProduct(slug: string): Promise<ApiResponse<Product>> {
     try {
-      return await api.get<unknown, ApiResponse<Product>>(`/products/${slug}`);
+      const res = await api.get<unknown, ApiResponse<Product>>(`/products/${slug}`);
+      if (!res || !res.data || typeof res.data !== 'object') {
+        const match = getFallbackProduct(slug);
+        if (match) {
+          return {
+            success: true,
+            statusCode: 200,
+            message: 'Product retrieved from fallback',
+            data: match,
+          };
+        }
+      }
+      return res;
     } catch {
       const match = getFallbackProduct(slug);
       if (match) {
@@ -64,9 +80,19 @@ export const productService = {
 
   async getFeatured(limit = 8): Promise<ApiResponse<Product[]>> {
     try {
-      return await api.get<unknown, ApiResponse<Product[]>>(
+      const res = await api.get<unknown, ApiResponse<Product[]>>(
         `/products/featured?limit=${limit}`
       );
+      if (!res || !Array.isArray(res.data) || res.data.length === 0) {
+        const featured = FALLBACK_PRODUCTS.filter((p) => p.isFeatured).slice(0, limit);
+        return {
+          success: true,
+          statusCode: 200,
+          message: 'Featured products retrieved from fallback',
+          data: featured,
+        };
+      }
+      return res;
     } catch {
       const featured = FALLBACK_PRODUCTS.filter((p) => p.isFeatured).slice(0, limit);
       return {
