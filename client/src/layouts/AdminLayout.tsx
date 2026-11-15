@@ -3,7 +3,14 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+interface NavItem {
+  to: string;
+  end?: boolean;
+  icon: typeof LayoutDashboard;
+  label: string;
+}
+
+const navItems: NavItem[] = [
   { to: '/admin', end: true, icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/products', icon: Package, label: 'Products' },
   { to: '/admin/categories', icon: FolderTree, label: 'Categories' },
@@ -11,7 +18,7 @@ const navItems = [
   { to: '/admin/orders', icon: ClipboardList, label: 'Orders' },
   { to: '/admin/customers', icon: UsersRound, label: 'Customers' },
   { to: '/admin/audit-trail', icon: ClipboardClock, label: 'Audit trail' },
-] as const;
+];
 
 export default function AdminLayout() {
   return (
